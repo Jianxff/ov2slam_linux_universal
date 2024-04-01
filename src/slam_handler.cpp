@@ -30,26 +30,9 @@
 #include "vo_handler.hpp"
 
 
-SlamManager::SlamManager(std::shared_ptr<Options> pstate)
-    : poptions_(pstate)
+SlamHandler::SlamHandler(std::shared_ptr<Options> poptions)
+    : poptions_(poptions)
 {
-    // std::cout << "\n SLAM Manager is being created...\n";
-
-    // #ifdef OPENCV_CONTRIB
-    //     std::cout << "\n OPENCV CONTRIB FOUND!  BRIEF DESCRIPTOR WILL BE USED!\n";
-    // #else
-    //     std::cout << "\n OPENCV CONTRIB NOT FOUND!  ORB DESCRIPTOR WILL BE USED!\n";
-    // #endif
-
-    // #ifdef USE_OPENGV
-    //     std::cout << "\n OPENGV FOUND!  OPENGV MVG FUNCTIONS WILL BE USED!\n";
-    // #else
-    //     std::cout << "\n OPENGV NOT FOUND!  OPENCV MVG FUNCTIONS WILL BE USED!\n";
-    // #endif
-
-    // We first setup the calibration to init everything related
-    // to the configuration of the current run
-    // std::cout << "\n SetupCalibration()\n";
     setupCalibration();
 
     if( poptions_->stereo_ && poptions_->bdo_stereo_rect_ ) {
@@ -111,7 +94,7 @@ SlamManager::SlamManager(std::shared_ptr<Options> pstate)
     pmapper_.reset( new Mapper(poptions_, pmap_, pcurframe_) );
 }
 
-void SlamManager::run()
+void SlamHandler::run()
 {
     // std::cout << "\nOV²SLAM is ready to process incoming images!\n";
 
@@ -145,19 +128,10 @@ void SlamManager::run()
                 last_img_time = time_now_ms / 1e3;
             }
 
-            // Display info on current frame state
-            // if( poptions_->debug_ )
-            //     pcurframe_->displayFrameInfo();
-
             // 1. Send images to the FrontEnd
             // =============================================
-            // if( poptions_->debug_ )
-            //     std::cout << "\n \t >>> [SLAM Node] New image send to Front-End\n";
 
             bool is_kf_req = pvisualfrontend_->visualTracking(img_left, time);
-
-            // Save current pose
-            Logger::addSE3Pose(time, pcurframe_->getTwc(), is_kf_req);
 
             if( poptions_->breset_req_ ) {
                 reset();
@@ -219,7 +193,6 @@ void SlamManager::run()
             }
             else {
                 std::chrono::milliseconds dura(1);
-                std::this_thread::sleep_for(dura);
             }
         }
     }
@@ -229,7 +202,7 @@ void SlamManager::run()
     bis_on_ = false;
 }
 
-void SlamManager::addNewMonoImage(const double time, cv::Mat &im0)
+void SlamHandler::addNewMonoImage(const double time, cv::Mat &im0)
 {
     if( poptions_->bdo_undist_ ) {
         pcalib_model_left_->rectifyImage(im0, im0);
@@ -240,9 +213,10 @@ void SlamManager::addNewMonoImage(const double time, cv::Mat &im0)
     qimg_time_.push(time);
 
     bnew_img_available_ = true;
+    run();
 }
 
-void SlamManager::addNewStereoImages(const double time, cv::Mat &im0, cv::Mat &im1) 
+void SlamHandler::addNewStereoImages(const double time, cv::Mat &im0, cv::Mat &im1) 
 {
     if( poptions_->bdo_stereo_rect_ || poptions_->bdo_undist_ ) {
         pcalib_model_left_->rectifyImage(im0, im0);
@@ -255,9 +229,10 @@ void SlamManager::addNewStereoImages(const double time, cv::Mat &im0, cv::Mat &i
     qimg_time_.push(time);
 
     bnew_img_available_ = true;
+    run();
 }
 
-bool SlamManager::getNewImage(cv::Mat &iml, cv::Mat &imr, double &time)
+bool SlamHandler::getNewImage(cv::Mat &iml, cv::Mat &imr, double &time)
 {
     std::lock_guard<std::mutex> lock(img_mutex_);
 
@@ -298,7 +273,7 @@ bool SlamManager::getNewImage(cv::Mat &iml, cv::Mat &imr, double &time)
     return true;
 }
 
-void SlamManager::setupCalibration()
+void SlamHandler::setupCalibration()
 {
     pcalib_model_left_.reset( 
                 new CameraCalibration(
@@ -332,7 +307,7 @@ void SlamManager::setupCalibration()
     }
 }
 
-void SlamManager::setupStereoCalibration()
+void SlamHandler::setupStereoCalibration()
 {
     // Apply stereorectify and setup the calibration models
     cv::Mat Rl, Rr, Pl, Pr, Q;
@@ -417,7 +392,7 @@ void SlamManager::setupStereoCalibration()
     poptions_->cyr_ = pcalib_model_right_->cy_;
 }
 
-void SlamManager::reset()
+void SlamHandler::reset()
 {
     pcurframe_->reset();
     pvisualfrontend_->reset();
@@ -443,7 +418,7 @@ void SlamManager::reset()
 //   Visualization functions
 // ==========================
 
-cv::Mat SlamManager::visualFrame()
+cv::Mat SlamHandler::visualFrame()
 {
     // // Display keypoints
     // cv::Mat img = cv::Mat(poptions_->img_left_h_, poptions_->img_left_w_, CV_8UC3);

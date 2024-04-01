@@ -29,9 +29,7 @@
 #include <mutex>
 #include <unordered_map>
 
-// #include <pcl_ros/point_cloud.h>
-
-#include "slam_params.hpp"
+#include "options.hpp"
 #include "frame.hpp"
 #include "map_point.hpp"
 #include "feature_extractor.hpp"

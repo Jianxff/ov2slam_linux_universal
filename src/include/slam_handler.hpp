@@ -30,10 +30,7 @@
 #include <queue>
 #include <mutex>
 
-#include "slam_params.hpp"
-
-#include "logger.hpp"
-
+#include "options.hpp"
 #include "camera_calibration.hpp"
 #include "feature_extractor.hpp"
 #include "feature_tracker.hpp"
@@ -44,12 +41,12 @@
 #include "mapper.hpp"
 #include "estimator.hpp"
 
-class SlamManager {
+class SlamHandler {
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    SlamManager(std::shared_ptr<Options> pstate);
+    SlamHandler(std::shared_ptr<Options> pstate);
 
     void run();
 
@@ -64,11 +61,6 @@ public:
     void reset();
 
     cv::Mat visualFrame();
-
-    void writeResults();
-
-    void writeFullTrajectoryLC();
-
 
     int frame_id_ = -1;
     bool bnew_img_available_ = false;

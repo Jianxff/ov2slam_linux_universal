@@ -31,7 +31,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "slam_params.hpp"
+#include "options.hpp"
 #include "map_manager.hpp"
 #include "feature_tracker.hpp"
 

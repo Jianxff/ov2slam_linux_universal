@@ -24,7 +24,7 @@
 *             Martial Sanfourche <first.last at onera dot fr>      (ONERA, DTIS - IVA)
 */
 
-#include "slam_params.hpp"
+#include "options.hpp"
 
 Options::Options(const cv::FileStorage &fsSettings) {
 

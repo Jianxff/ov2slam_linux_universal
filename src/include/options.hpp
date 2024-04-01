@@ -39,8 +39,6 @@
 #include <opencv2/core.hpp>
 #include <opencv2/core/eigen.hpp>
 
-#include "profiler.hpp"
-
 class Options {
 
 public:
