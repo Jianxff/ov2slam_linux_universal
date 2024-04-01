@@ -30,8 +30,8 @@
 
 #include "map_manager.hpp"
 
-MapManager::MapManager(std::shared_ptr<SlamParams> pstate, std::shared_ptr<Frame> pframe, std::shared_ptr<FeatureExtractor> pfeatextract, std::shared_ptr<FeatureTracker> ptracker)
-    : nlmid_(0), nkfid_(0), nblms_(0), nbkfs_(0), pslamstate_(pstate), pfeatextract_(pfeatextract), ptracker_(ptracker), pcurframe_(pframe)
+MapManager::MapManager(std::shared_ptr<Options> pstate, std::shared_ptr<Frame> pframe, std::shared_ptr<FeatureExtractor> pfeatextract, std::shared_ptr<FeatureTracker> ptracker)
+    : nlmid_(0), nkfid_(0), nblms_(0), nbkfs_(0), poptions_(pstate), pfeatextract_(pfeatextract), ptracker_(ptracker), pcurframe_(pframe)
 {
 }
 
@@ -41,7 +41,7 @@ MapManager::MapManager(std::shared_ptr<SlamParams> pstate, std::shared_ptr<Frame
 // the new KF are added to the map.
 void MapManager::createKeyframe(const cv::Mat &im, const cv::Mat &imraw)
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("1.FE_createKeyframe");
 
     // Prepare Frame to become a KF
@@ -54,22 +54,22 @@ void MapManager::createKeyframe(const cv::Mat &im, const cv::Mat &imraw)
     // Add KF to the map
     addKeyframe();
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.FE_createKeyframe");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "1.FE_createKeyframe");
 }
 
 // Prepare Frame to become a KF
 // (Update observations between MPs / KFs)
 void MapManager::prepareFrame()
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.FE_CF_prepareFrame");
 
     // Update new KF id
     pcurframe_->kfid_ = nkfid_;
 
     // Filter if too many kps
-    if( (int)pcurframe_->nbkps_ > pslamstate_->nbmaxkps_ ) {
+    if( (int)pcurframe_->nbkps_ > poptions_->nbmaxkps_ ) {
         for( const auto &vkpids : pcurframe_->vgridkps_ ) {
             if( vkpids.size() > 2 ) {
                 int lmid2remove = -1;
@@ -108,13 +108,13 @@ void MapManager::prepareFrame()
         plmit->second->addKfObs(nkfid_);
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_prepareFrame");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.FE_CF_prepareFrame");
 }
 
 void MapManager::updateFrameCovisibility(Frame &frame)
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("1.KF_updateFrameCovisilbity");
 
     // Update the MPs and the covisilbe graph between KFs
@@ -186,8 +186,8 @@ void MapManager::updateFrameCovisibility(Frame &frame)
         frame.set_local_mapids_.insert(set_local_mapids.begin(), set_local_mapids.end());
     }
     
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_updateFrameCovisilbity");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "1.KF_updateFrameCovisilbity");
 }
 
 void MapManager::addKeypointsToFrame(const cv::Mat &im, const std::vector<cv::Point2f> &vpts, Frame &frame)
@@ -283,7 +283,7 @@ void MapManager::addKeypointsToFrame(const cv::Mat &im, const std::vector<cv::Po
 // Extract new kps into provided image and update cur. Frame
 void MapManager::extractKeypoints(const cv::Mat &im, const cv::Mat &imraw)
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.FE_CF_extractKeypoints");
 
     std::vector<Keypoint> vkps = pcurframe_->getKeypoints();
@@ -296,46 +296,46 @@ void MapManager::extractKeypoints(const cv::Mat &im, const cv::Mat &imraw)
         vpts.push_back(kp.px_);
     }
 
-    if( pslamstate_->use_brief_ ) {
+    if( poptions_->use_brief_ ) {
         describeKeypoints(imraw, vkps, vpts);
     }
 
-    int nb2detect = pslamstate_->nbmaxkps_ - pcurframe_->noccupcells_;
+    int nb2detect = poptions_->nbmaxkps_ - pcurframe_->noccupcells_;
 
     if( nb2detect > 0 ) {
         // Detect kps in the provided images
         // using the cur kps and img roi to set a mask
         std::vector<cv::Point2f> vnewpts;
 
-        if( pslamstate_->use_shi_tomasi_ ) {
+        if( poptions_->use_shi_tomasi_ ) {
             vnewpts = pfeatextract_->detectGFTT(im, vpts, pcurframe_->pcalib_leftcam_->roi_mask_, nb2detect);
         } 
-        else if( pslamstate_->use_fast_ ) {
-            vnewpts = pfeatextract_->detectGridFAST(im, pslamstate_->nmaxdist_, vpts, pcurframe_->pcalib_leftcam_->roi_rect_);
+        else if( poptions_->use_fast_ ) {
+            vnewpts = pfeatextract_->detectGridFAST(im, poptions_->nmaxdist_, vpts, pcurframe_->pcalib_leftcam_->roi_rect_);
         } 
-        else if ( pslamstate_->use_singlescale_detector_ ) {
-            vnewpts = pfeatextract_->detectSingleScale(im, pslamstate_->nmaxdist_, vpts, pcurframe_->pcalib_leftcam_->roi_rect_);
+        else if ( poptions_->use_singlescale_detector_ ) {
+            vnewpts = pfeatextract_->detectSingleScale(im, poptions_->nmaxdist_, vpts, pcurframe_->pcalib_leftcam_->roi_rect_);
         } else {
             std::cerr << "\n Choose a detector between : gftt / FAST / SingleScale detector!";
             exit(-1);
         }
 
         if( !vnewpts.empty() ) {
-            if( pslamstate_->use_brief_ ) {
+            if( poptions_->use_brief_ ) {
                 std::vector<cv::Mat> vdescs;
                 vdescs = pfeatextract_->describeBRIEF(imraw, vnewpts);
                 addKeypointsToFrame(im, vnewpts, vdescs, *pcurframe_);
             } 
-            else if( pslamstate_->use_shi_tomasi_ || pslamstate_->use_fast_ 
-                || pslamstate_->use_singlescale_detector_ ) 
+            else if( poptions_->use_shi_tomasi_ || poptions_->use_fast_ 
+                || poptions_->use_singlescale_detector_ ) 
             {
                 addKeypointsToFrame(im, vnewpts, *pcurframe_);
             }
         }
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_extractKeypoints");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.FE_CF_extractKeypoints");
 }
 
 
@@ -345,7 +345,7 @@ void MapManager::describeKeypoints(const cv::Mat &im, const std::vector<Keypoint
     size_t nbkps = vkps.size();
     std::vector<cv::Mat> vdescs;
 
-    if( pslamstate_->use_brief_ ) {
+    if( poptions_->use_brief_ ) {
         vdescs = pfeatextract_->describeBRIEF(im, vpts);
     }
 
@@ -364,7 +364,7 @@ void MapManager::describeKeypoints(const cv::Mat &im, const std::vector<Keypoint
 // for the means of triangulation
 void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftpyr, const std::vector<cv::Mat> &vrightpyr) 
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("1.KF_stereoMatching");
 
     // Find stereo correspondances with left kps
@@ -372,10 +372,10 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
     size_t nbkps = vleftkps.size();
 
     // ZNCC Parameters
-    size_t nmaxpyrlvl = pslamstate_->nklt_pyr_lvl_*2;
+    size_t nmaxpyrlvl = poptions_->nklt_pyr_lvl_*2;
     int winsize = 7;
 
-    float uppyrcoef = std::pow(2,pslamstate_->nklt_pyr_lvl_);
+    float uppyrcoef = std::pow(2,poptions_->nklt_pyr_lvl_);
     float downpyrcoef = 1. / uppyrcoef;
     
     std::vector<int> v3dkpids, vkpids, voutkpids, vpriorids;
@@ -417,7 +417,7 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
         } 
         
         // If stereo rect images, prior from SAD
-        if( pslamstate_->bdo_stereo_rect_ ) {
+        if( poptions_->bdo_stereo_rect_ ) {
 
             float xprior = -1.;
             float l1err;
@@ -496,7 +496,7 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
     if( !v3dpriors.empty() ) 
     {
         size_t nbpyrlvl = 1;
-        int nwinsize = pslamstate_->nklt_win_size_; // What about a smaller window here?
+        int nwinsize = poptions_->nklt_win_size_; // What about a smaller window here?
 
         if( vleftpyr.size() < 2*(nbpyrlvl+1) ) {
             nbpyrlvl = vleftpyr.size() / 2 - 1;
@@ -510,8 +510,8 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
                     vrightpyr, 
                     nwinsize, 
                     nbpyrlvl, 
-                    pslamstate_->nklt_err_, 
-                    pslamstate_->fmax_fbklt_dist_, 
+                    poptions_->nklt_err_, 
+                    poptions_->fmax_fbklt_dist_, 
                     v3dkps, 
                     v3dpriors, 
                     vkpstatus);
@@ -534,7 +534,7 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
             }
         }
 
-        // if( pslamstate_->debug_ ) 
+        // if( poptions_->debug_ ) 
         //     std::cout << "\n >>> Stereo KLT Tracking on priors : " << nbgood 
         //         << " out of " << nb3dkps << " kps tracked!\n";
     }
@@ -548,10 +548,10 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
         ptracker_->fbKltTracking(
                     vleftpyr, 
                     vrightpyr, 
-                    pslamstate_->nklt_win_size_, 
-                    pslamstate_->nklt_pyr_lvl_, 
-                    pslamstate_->nklt_err_, 
-                    pslamstate_->fmax_fbklt_dist_, 
+                    poptions_->nklt_win_size_, 
+                    poptions_->nklt_pyr_lvl_, 
+                    poptions_->nklt_err_, 
+                    poptions_->fmax_fbklt_dist_, 
                     vkps, 
                     vpriors, 
                     vkpstatus);
@@ -568,7 +568,7 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
             }
         }
 
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << "\n >>> Stereo KLT Tracking w. no priors : " << nbgood
         //         << " out of " << nb2dkps << " kps tracked!\n";
     }
@@ -584,7 +584,7 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
         cv::Point2f runpx = frame.pcalib_rightcam_->undistortImagePoint(vgoodrkps.at(i));
 
         // Check epipolar consistency (same row for rectified images)
-        if( pslamstate_->bdo_stereo_rect_ ) {
+        if( poptions_->bdo_stereo_rect_ ) {
             epi_err = fabs(lunpx.y - runpx.y);
             // Correct right kp to be on the same row
             vgoodrkps.at(i).y = lunpx.y;
@@ -600,12 +600,12 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
         }
     }
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n \t>>> Nb of stereo tracks: " << nbgood
     //         << " out of " << nbkps << "\n";
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_stereoMatching");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "1.KF_stereoMatching");
 }
 
 
@@ -766,15 +766,15 @@ void MapManager::mergeMapPoints(const int prevlmid, const int newlmid)
     auto pnewlmit = map_plms_.find(newlmid);
 
     if( pprevlmit == map_plms_.end() ) {
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << "\nMergeMapPoints skipping as prevlm is null\n";
         return;
     } else if( pnewlmit == map_plms_.end() ) {
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << "\nMergeMapPoints skipping as newlm is null\n";
         return;
     } else if ( !pnewlmit->second->is3d_ ) {
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << "\nMergeMapPoints skipping as newlm is not 3d\n";
         return;
     }
@@ -859,7 +859,7 @@ void MapManager::removeKeyframe(const int kfid)
     map_pkfs_.erase( pkfit );
     nbkfs_--;
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n \t >>> removeKeyframe() --> Removed KF #" << kfid;
 }
 

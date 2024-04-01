@@ -35,8 +35,8 @@
 class Optimizer {
 
 public:
-    Optimizer(std::shared_ptr<SlamParams> pslamstate, std::shared_ptr<MapManager> pmap)
-        : pslamstate_(pslamstate), pmap_(pmap), bstop_localba_(false)
+    Optimizer(std::shared_ptr<Options> poptions, std::shared_ptr<MapManager> pmap)
+        : poptions_(poptions), pmap_(pmap), bstop_localba_(false)
     {
         std::cout << "\n Optimizer Object is created!\n";
     }
@@ -60,7 +60,7 @@ public:
 
 
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
     std::shared_ptr<MapManager> pmap_;
 
     bool bstop_localba_;

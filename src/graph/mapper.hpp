@@ -34,7 +34,7 @@
 #include "multi_view_geometry.hpp"
 #include "optimizer.hpp"
 #include "estimator.hpp"
-#include "loop_closer.hpp"
+// #include "loop_closer.hpp"
 
 struct Keyframe {
     int kfid_;
@@ -90,7 +90,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     Mapper() {}
-    Mapper(std::shared_ptr<SlamParams> pslamstate, std::shared_ptr<MapManager> pmap, std::shared_ptr<Frame> pframe);
+    Mapper(std::shared_ptr<Options> poptions, std::shared_ptr<MapManager> pmap, std::shared_ptr<Frame> pframe);
 
     void run();
 
@@ -117,12 +117,12 @@ public:
 
     void reset();
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
     std::shared_ptr<MapManager> pmap_;
     std::shared_ptr<Frame> pcurframe_;
 
     std::shared_ptr<Estimator> pestimator_;
-    std::shared_ptr<LoopCloser> ploopcloser_;
+    // std::shared_ptr<LoopCloser> ploopcloser_;
 
     bool bnewkfavailable_ = false;
     bool bwaiting_for_lc_ = false;

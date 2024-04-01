@@ -26,7 +26,7 @@
 
 #include "slam_params.hpp"
 
-SlamParams::SlamParams(const cv::FileStorage &fsSettings) {
+Options::Options(const cv::FileStorage &fsSettings) {
 
     // std::cout << "\nSLAM Parameters are being setup...\n";
 
@@ -166,7 +166,7 @@ SlamParams::SlamParams(const cv::FileStorage &fsSettings) {
     do_full_ba_ = static_cast<int>(fsSettings["do_full_ba"]);
 }
 
-void SlamParams::reset() {
+void Options::reset() {
     blocalba_is_on_ = false;
     blc_is_on_ = false;
     bvision_init_ = false;

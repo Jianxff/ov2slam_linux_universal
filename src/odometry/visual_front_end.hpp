@@ -95,7 +95,7 @@ public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     VisualFrontEnd() {}
-    VisualFrontEnd(std::shared_ptr<SlamParams> pstate, std::shared_ptr<Frame> pframerame, 
+    VisualFrontEnd(std::shared_ptr<Options> pstate, std::shared_ptr<Frame> pframerame, 
         std::shared_ptr<MapManager> pmap, std::shared_ptr<FeatureTracker> ptracker);
 
     bool visualTracking(cv::Mat &iml, double time);
@@ -126,7 +126,7 @@ public:
     void resetFrame();
     void reset();
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
     std::shared_ptr<Frame> pcurframe_;
     std::shared_ptr<MapManager> pmap_;
 

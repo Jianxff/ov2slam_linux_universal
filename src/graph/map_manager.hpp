@@ -45,7 +45,7 @@ public:
 
     MapManager() {}
 
-    MapManager(std::shared_ptr<SlamParams> pstate, std::shared_ptr<Frame> pframe, std::shared_ptr<FeatureExtractor> pfeatextract, std::shared_ptr<FeatureTracker> ptracker);
+    MapManager(std::shared_ptr<Options> pstate, std::shared_ptr<Frame> pframe, std::shared_ptr<FeatureExtractor> pfeatextract, std::shared_ptr<FeatureTracker> ptracker);
 
     void prepareFrame();
     
@@ -111,7 +111,7 @@ public:
     int nlmid_, nkfid_;
     int nblms_, nbkfs_;
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
     std::shared_ptr<FeatureExtractor> pfeatextract_;
     std::shared_ptr<FeatureTracker> ptracker_;
 

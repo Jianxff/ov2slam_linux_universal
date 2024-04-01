@@ -37,9 +37,9 @@ class Estimator {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    Estimator(std::shared_ptr<SlamParams> pslamstate, std::shared_ptr<MapManager> pmap)
-        : pslamstate_(pslamstate), pmap_(pmap)
-        , poptimizer_( new Optimizer(pslamstate_, pmap_) )
+    Estimator(std::shared_ptr<Options> poptions, std::shared_ptr<MapManager> pmap)
+        : poptions_(poptions), pmap_(pmap)
+        , poptimizer_( new Optimizer(poptions_, pmap_) )
     {
         std::cout << "\n Estimator Object is created!\n";
     }
@@ -56,7 +56,7 @@ public:
     void addNewKf(const std::shared_ptr<Frame> &pkf);
 
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
     std::shared_ptr<MapManager> pmap_;
 
     std::unique_ptr<Optimizer> poptimizer_;

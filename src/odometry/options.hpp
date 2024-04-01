@@ -41,14 +41,14 @@
 
 #include "profiler.hpp"
 
-class SlamParams {
+class Options {
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    SlamParams() {}
+    Options() {}
     
-    SlamParams(const cv::FileStorage &fsSettings);
+    Options(const cv::FileStorage &fsSettings);
 
     void reset();
 

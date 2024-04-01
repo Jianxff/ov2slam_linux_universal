@@ -28,12 +28,10 @@
 
 #include "ceres_parametrization.hpp"
 
-#include <thread>
-
 
 void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.BA_SetupPb");
 
     // =================================
@@ -44,7 +42,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     ceres::LossFunctionWrapper *loss_function;
     
     // Chi2 thresh.
-    const float mono_th = pslamstate_->robust_mono_th_;
+    const float mono_th = poptions_->robust_mono_th_;
 
     loss_function = new ceres::LossFunctionWrapper(new ceres::HuberLoss(std::sqrt(mono_th)), ceres::TAKE_OWNERSHIP);
 
@@ -54,7 +52,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
     // Thresh. score for optimizing / fixing
     // a KF in BA (cov score with new KF)
-    int nmincovscore = pslamstate_->nmin_covscore_;
+    int nmincovscore = poptions_->nmin_covscore_;
 
     // Do not optim is tracking is poor 
     // (hopefully will get better soon!)
@@ -64,7 +62,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
     size_t nmincstkfs = 2;
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         nmincstkfs = 1;
     }
 
@@ -104,7 +102,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     Sophus::SE3d Trl, Tlr;
     PoseParametersBlock rlextrinpose(0, Trl);
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         // Right Intrinsic
         rightcalibpar = CalibParametersBlock(0, pcalibright->fx_, pcalibright->fy_, pcalibright->cx_, pcalibright->cy_);
         problem.AddParameterBlock(rightcalibpar.values(), 4);
@@ -138,7 +136,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     std::unordered_set<int> set_kfids2opt;
     std::unordered_set<int> set_cstkfids;
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n >>> Local BA : new KF is #" << newframe.kfid_ 
     //         << " -- with covisible graph of size : " << map_covkfs.size();
 
@@ -204,7 +202,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
         map_local_plms.emplace(lmid, plm);
 
-        if( !pslamstate_->buse_inv_depth_ )
+        if( !poptions_->buse_inv_depth_ )
         {
             map_id_pointspar_.emplace(lmid, PointXYZParametersBlock(lmid, plm->getPoint()));
 
@@ -255,7 +253,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
                 continue;
             }
 
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 if( kfanchid < 0 ) {
                     kfanchid = kfid;
                     unanch_u = kp.unpx_.x;
@@ -294,7 +292,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
             // Add a visual factor between KF-MP nodes
             if( kp.is_stereo_ ) {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
 
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
@@ -361,7 +359,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
                 }
             } 
             else {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
                                 std::pow(2.,kp.scale_)
@@ -410,7 +408,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     size_t nbkfs2opt = nbkfstot - nbcstkfs;
     size_t nblms2opt = map_local_plms.size();
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\n\n >>> LocalBA problem setup!";
     //     std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
     //         << " / " << nbkfstot;
@@ -436,15 +434,15 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     ceres::Solver::Options options;
     options.linear_solver_ordering.reset(ordering);
 
-    if( pslamstate_->use_sparse_schur_ ) {
+    if( poptions_->use_sparse_schur_ ) {
         options.linear_solver_type = ceres::SPARSE_SCHUR;
     } else {
         options.linear_solver_type = ceres::DENSE_SCHUR;
     }
 
-    if( pslamstate_->use_dogleg_ ) {
+    if( poptions_->use_dogleg_ ) {
         options.trust_region_strategy_type = ceres::DOGLEG;
-        if( pslamstate_->use_subspace_dogleg_ ) {
+        if( poptions_->use_subspace_dogleg_ ) {
             options.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
         } else {
             options.dogleg_type = ceres::DoglegType::TRADITIONAL_DOGLEG;
@@ -453,7 +451,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     }
 
-    if( pslamstate_->use_nonmonotic_step_ ) {
+    if( poptions_->use_nonmonotic_step_ ) {
         options.use_nonmonotonic_steps = true;
     }
 
@@ -463,26 +461,26 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     options.function_tolerance = 1.e-3;
     options.max_solver_time_in_seconds = 0.2;
 
-    if( !pslamstate_->bforce_realtime_ ) {
+    if( !poptions_->bforce_realtime_ ) {
         options.max_solver_time_in_seconds *= 2.;
     }
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_SetupPb");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.BA_SetupPb");
     
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.BA_Optimize");
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Optimize");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.BA_Optimize");
 
 
     // =================================
@@ -502,7 +500,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -515,7 +513,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -536,7 +534,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorRightCamKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -548,7 +546,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         }
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -575,7 +573,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -600,7 +598,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     bool bl2optimdone = false;
 
     // Refine without Robust cost if req.
-    if( pslamstate_->apply_l2_after_robust_ && buse_robust_cost 
+    if( poptions_->apply_l2_after_robust_ && buse_robust_cost 
         && !stopLocalBA() && nbbadobs > 0 )
     {
         if( !vreprojerr_kfid_lmid.empty() && !vright_reprojerr_kfid_lmid.empty() ) {
@@ -612,21 +610,21 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         options.max_solver_time_in_seconds /= 2.;
         // options.max_solver_time_in_seconds = 0.05;
         
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     Profiler::Start("2.BA_L2-Refinement");
 
         ceres::Solve(options, &problem, &summary);
 
         bl2optimdone = true;
 
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << summary.FullReport() << std::endl;
 
-        // if( pslamstate_->debug_ )
-        //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_L2-Refinement");
+        // if( poptions_->debug_ )
+        //     Profiler::StopAndDisplay(poptions_->debug_, "2.BA_L2-Refinement");
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.BA_Update");
 
     // =================================
@@ -643,7 +641,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         {
             bool bbigchi2 = true;
             bool bdepthpos = true;
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 auto *err = static_cast<DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth*>(it->first);
                 bbigchi2 = err->chi2err_ > mono_th;
                 bdepthpos = err->isdepthpositive_;
@@ -674,7 +672,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
             {
                 bool bbigchi2 = true;
                 bool bdepthpos = true;
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     auto *err = static_cast<DirectLeftSE3::ReprojectionErrorRightCamKSE3AnchInvDepth*>(it->first);
                     bbigchi2 = err->chi2err_ > mono_th;
                     bdepthpos = err->isdepthpositive_;
@@ -686,7 +684,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
                 }
                 if( bbigchi2 || !bdepthpos )
                 {
-                    if( pslamstate_->apply_l2_after_robust_ ) {
+                    if( poptions_->apply_l2_after_robust_ ) {
                         auto rid = it->second.first;
                         problem.RemoveResidualBlock(rid);
                     }
@@ -716,7 +714,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
                 if( bbigchi2 || !bdepthpos )
                 {
-                    if( pslamstate_->apply_l2_after_robust_ ) {
+                    if( poptions_->apply_l2_after_robust_ ) {
                         auto rid = it->second.first;
                         problem.RemoveResidualBlock(rid);
                     }
@@ -812,7 +810,7 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
             }
         }
 
-        if( pslamstate_->buse_inv_depth_ ) 
+        if( poptions_->buse_inv_depth_ ) 
         {
             auto invptit = map_id_invptspar_.find(lmid);
             if( invptit == map_id_invptspar_.end() ) {
@@ -883,15 +881,15 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
     nbbadobs = nbbadobsmono + nbbadobsrightcam;
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\n \t>>> localBA() --> Nb of bad obs / nb removed MP : " 
     //         << nbbadobs << " / " << nbbadlm;
     //     std::cout << "\n \t>>> localBA() --> Nb of bad obs mono / right : " 
     //         << nbbadobsmono << " / " << nbbadobsrightcam;
     // }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Update");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.BA_Update");
 
     bstop_localba_ = false;
 }
@@ -905,14 +903,14 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
     Frame &newframe = *pmap_->getKeyframe(nkfid);
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_LooseBA_setup");
 
     ceres::Problem problem;
     ceres::LossFunctionWrapper *loss_function;
     
     // Chi2 thresh.
-    const float mono_th = pslamstate_->robust_mono_th_;
+    const float mono_th = poptions_->robust_mono_th_;
 
     loss_function = new ceres::LossFunctionWrapper(new ceres::HuberLoss(std::sqrt(mono_th)), ceres::TAKE_OWNERSHIP);
 
@@ -922,7 +920,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
     size_t nmincstkfs = 2;
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         nmincstkfs = 1;
     }
 
@@ -962,7 +960,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     Sophus::SE3d Trl, Tlr;
     PoseParametersBlock rlextrinpose(0, Trl);
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         // Right Intrinsic
         rightcalibpar = CalibParametersBlock(0, pcalibright->fx_, pcalibright->fy_, pcalibright->cx_, pcalibright->cy_);
         problem.AddParameterBlock(rightcalibpar.values(), 4);
@@ -1039,7 +1037,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
         map_local_plms.emplace(lmid, plm);
 
-        if( !pslamstate_->buse_inv_depth_ )
+        if( !poptions_->buse_inv_depth_ )
         {
             map_id_pointspar_.emplace(lmid, PointXYZParametersBlock(lmid, plm->getPoint()));
 
@@ -1090,7 +1088,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
                 continue;
             }
 
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 if( kfanchid < 0 ) {
                     kfanchid = kfid;
                     unanch_u = kp.unpx_.x;
@@ -1129,7 +1127,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
             // Add a visual factor between KF-MP nodes
             if( kp.is_stereo_ ) {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
@@ -1195,7 +1193,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
                 }
             } 
             else {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
                                 std::pow(2.,kp.scale_)
@@ -1249,7 +1247,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     size_t nbkfs2opt = nbkfstot - nbcstkfs;
     size_t nblms2opt = map_local_plms.size();
 
-    if( pslamstate_->debug_ ) {
+    if( poptions_->debug_ ) {
         std::cout << "\n\n >>> [looseBA] problem setup!";
         std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
             << " / " << nbkfstot;
@@ -1271,15 +1269,15 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     ceres::Solver::Options options;
     options.linear_solver_ordering.reset(ordering);
 
-    if( pslamstate_->use_sparse_schur_ ) {
+    if( poptions_->use_sparse_schur_ ) {
         options.linear_solver_type = ceres::SPARSE_SCHUR;
     } else {
         options.linear_solver_type = ceres::DENSE_SCHUR;
     }
 
-    if( pslamstate_->use_dogleg_ ) {
+    if( poptions_->use_dogleg_ ) {
         options.trust_region_strategy_type = ceres::DOGLEG;
-        if( pslamstate_->use_subspace_dogleg_ ) {
+        if( poptions_->use_subspace_dogleg_ ) {
             options.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
         } else {
             options.dogleg_type = ceres::DoglegType::TRADITIONAL_DOGLEG;
@@ -1288,7 +1286,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     }
 
-    if( pslamstate_->use_nonmonotic_step_ ) {
+    if( poptions_->use_nonmonotic_step_ ) {
         options.linear_solver_type = ceres::SPARSE_SCHUR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
         options.use_nonmonotonic_steps = true;
@@ -1298,24 +1296,24 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     options.max_num_iterations = 5;
     options.function_tolerance = 1.e-4;
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_setup");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_LooseBA_setup");
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_LooseBA_Optimize");
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Optimize");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_LooseBA_Optimize");
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_LooseBA_remove-outliers");
 
 
@@ -1337,7 +1335,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -1350,7 +1348,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
         
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -1371,7 +1369,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorRightCamKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -1384,7 +1382,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
         
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -1411,7 +1409,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -1443,7 +1441,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     Sophus::SE3d iniTnewkfw = newframe.getTcw();
     Sophus::SE3d optTwnewkf = map_id_posespar_.at(newframe.kfid_).getPose();
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\n \t>>> looseBA() --> Kf loop old pos : " 
     //         << iniTnewkfw.inverse().translation().transpose() << "\n";
     //     std::cout << "\n \t>>> looseBA() --> Kf loop new pos : " 
@@ -1484,7 +1482,7 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
             continue;
         } 
 
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto invptit = map_id_invptspar_.find(lmid);
             if( invptit == map_id_invptspar_.end() ) {
                 set_badlmids.insert(lmid);
@@ -1523,14 +1521,14 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
         }
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_remove-outliers");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_LooseBA_remove-outliers");
 
     std::lock_guard<std::mutex> lock2(pmap_->optim_mutex_);
 
     std::lock_guard<std::mutex> lock(pmap_->map_mutex_);
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_LooseBA_Update");
 
     // Update KFs / MPs
@@ -1658,15 +1656,15 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
     size_t nbbadobs = nbbadobsmono + nbbadobsrightcam;
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\n \t>>> looseBA() --> Nb of bad obs / nb removed MP : " 
     //         << nbbadobs << " / " << nbbadlm;
     //     std::cout << "\n \t>>> looseBA() --> Nb of bad obs mono / stereo / right : " 
     //         << nbbadobsmono << " / " << nbbadobsrightcam;
     // }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Update");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_LooseBA_Update");
 }
 
 
@@ -1682,7 +1680,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     ceres::Problem problem;
     ceres::LossFunctionWrapper *loss_function;
     
-    const float mono_th = pslamstate_->robust_mono_th_;
+    const float mono_th = poptions_->robust_mono_th_;
     
     auto *mono_robust_loss =  new ceres::HuberLoss(std::sqrt(mono_th));
 
@@ -1694,7 +1692,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
     size_t nmincstkfs = 2;
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         nmincstkfs = 1;
     }
 
@@ -1734,7 +1732,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     Sophus::SE3d Trl, Tlr;
     PoseParametersBlock rlextrinpose(0, Trl);
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         // Right Intrinsic
         rightcalibpar = CalibParametersBlock(0, pcalibright->fx_, pcalibright->fy_, pcalibright->cx_, pcalibright->cy_);
         problem.AddParameterBlock(rightcalibpar.values(), 4);
@@ -1762,7 +1760,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     std::set<int> set_lmids2opt;
     std::set<int> set_cstkfids;
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n >>> Full BA \n";
 
     // Add the KFs to optimize to BA (new KF + cov KFs)
@@ -1817,7 +1815,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
         map_local_plms.emplace(lmid, plm);
 
-        if( !pslamstate_->buse_inv_depth_ )
+        if( !poptions_->buse_inv_depth_ )
         {
             map_id_pointspar_.emplace(lmid, PointXYZParametersBlock(lmid, plm->getPoint()));
 
@@ -1864,7 +1862,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
                 continue;
             }
 
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 if( kfanchid < 0 ) {
                     kfanchid = kfid;
                     unanch_u = kp.unpx_.x;
@@ -1900,7 +1898,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
             // Add a visual factor between KF-MP nodes
             if( kp.is_stereo_ ) {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
                                 std::pow(2.,kp.scale_)
@@ -1964,7 +1962,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
                 }
             } 
             else {
-                if( pslamstate_->buse_inv_depth_ ) {
+                if( poptions_->buse_inv_depth_ ) {
                     f = new DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth(
                                 kp.unpx_.x, kp.unpx_.y, unanch_u, unanch_v, 
                                 std::pow(2.,kp.scale_)
@@ -2019,7 +2017,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     size_t nblms2opt = map_local_plms.size();
 
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\n >>> FullBA problem setup!";
     //     std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
     //         << " / " << nbkfstot;
@@ -2029,15 +2027,15 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     ceres::Solver::Options options;
     options.linear_solver_ordering.reset(ordering);
 
-    if( pslamstate_->use_sparse_schur_ ) {
+    if( poptions_->use_sparse_schur_ ) {
         options.linear_solver_type = ceres::SPARSE_SCHUR;
     } else {
         options.linear_solver_type = ceres::DENSE_SCHUR;
     }
 
-    if( pslamstate_->use_dogleg_ ) {
+    if( poptions_->use_dogleg_ ) {
         options.trust_region_strategy_type = ceres::DOGLEG;
-        if( pslamstate_->use_subspace_dogleg_ ) {
+        if( poptions_->use_subspace_dogleg_ ) {
             options.dogleg_type = ceres::DoglegType::SUBSPACE_DOGLEG;
         } else {
             options.dogleg_type = ceres::DoglegType::TRADITIONAL_DOGLEG;
@@ -2046,7 +2044,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     }
 
-    if( pslamstate_->use_nonmonotic_step_ ) {
+    if( poptions_->use_nonmonotic_step_ ) {
         options.linear_solver_type = ceres::SPARSE_SCHUR;
         options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
         options.use_nonmonotonic_steps = true;
@@ -2055,12 +2053,12 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     options.num_threads = 8;
     options.max_num_iterations = 100;
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
 
 
@@ -2072,7 +2070,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -2085,7 +2083,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
         
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -2107,7 +2105,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
         {
             bool bbigchi2 = true;
             bool bdepthpos = true;
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 auto *err = static_cast<DirectLeftSE3::ReprojectionErrorRightCamKSE3AnchInvDepth*>(it->first);
                 bbigchi2 = err->chi2err_ > mono_th;
                 bdepthpos = err->isdepthpositive_;
@@ -2120,7 +2118,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
             if( bbigchi2 || !bdepthpos )
             {
-                if( pslamstate_->apply_l2_after_robust_ ) {
+                if( poptions_->apply_l2_after_robust_ ) {
                     auto rid = it->second.first;
                     problem.RemoveResidualBlock(rid);
                 }
@@ -2140,7 +2138,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     size_t nbbadobs = nbbadobsmono + nbbadobsrightcam;
 
     // Refine without Robust cost
-    if( pslamstate_->apply_l2_after_robust_ && nbbadobs > 0 ) 
+    if( poptions_->apply_l2_after_robust_ && nbbadobs > 0 ) 
     {
         if( !vreprojerr_kfid_lmid.empty() ) {
             loss_function->Reset(nullptr, ceres::TAKE_OWNERSHIP);
@@ -2148,7 +2146,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
         ceres::Solve(options, &problem, &summary);
 
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << summary.FullReport() << std::endl;
     }
 
@@ -2160,7 +2158,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     {
         bool bbigchi2 = true;
         bool bdepthpos = true;
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto *err = static_cast<DirectLeftSE3::ReprojectionErrorKSE3AnchInvDepth*>(it->first);
             bbigchi2 = err->chi2err_ > mono_th;
             bdepthpos = err->isdepthpositive_;
@@ -2173,7 +2171,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
         
         if( bbigchi2 || !bdepthpos )
         {
-            if( pslamstate_->apply_l2_after_robust_ ) {
+            if( poptions_->apply_l2_after_robust_ ) {
                 auto rid = it->second.first;
                 problem.RemoveResidualBlock(rid);
             }
@@ -2195,7 +2193,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
         {
             bool bbigchi2 = true;
             bool bdepthpos = true;
-            if( pslamstate_->buse_inv_depth_ ) {
+            if( poptions_->buse_inv_depth_ ) {
                 auto *err = static_cast<DirectLeftSE3::ReprojectionErrorRightCamKSE3AnchInvDepth*>(it->first);
                 bbigchi2 = err->chi2err_ > mono_th;
                 bdepthpos = err->isdepthpositive_;
@@ -2208,7 +2206,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
             if( bbigchi2 || !bdepthpos )
             {
-                if( pslamstate_->apply_l2_after_robust_ ) {
+                if( poptions_->apply_l2_after_robust_ ) {
                     auto rid = it->second.first;
                     problem.RemoveResidualBlock(rid);
                 }
@@ -2264,7 +2262,7 @@ void Optimizer::fullBA(const bool buse_robust_cost)
             }
         }
 
-        if( pslamstate_->buse_inv_depth_ ) {
+        if( poptions_->buse_inv_depth_ ) {
             auto invptit = map_id_invptspar_.find(lmid);
             if( invptit == map_id_invptspar_.end() ) {
                 set_badlmids.erase(lmid);
@@ -2346,7 +2344,7 @@ bool Optimizer::stopLocalBA()
 bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3d& newTwc)
 {
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_PoseGraph_setup");
 
     ceres::Problem problem;
@@ -2354,13 +2352,13 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
     std::map<int, PoseParametersBlock> map_id_posespar_;
     std::map<int, std::shared_ptr<Frame>> map_pkfs;
 
-    // if( pslamstate_->debug_ ) 
+    // if( poptions_->debug_ ) 
     //     std::cout << "\n Going to opt pose graph between KF #" << kfloop_id 
     //         << " and KF #" << newframe.kfid_ << "\n";
 
     Sophus::SE3d iniTcw = newframe.getTcw();
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n Adding loop KF : ";
 
     auto ploopkf = pmap_->getKeyframe(kfloop_id);
@@ -2396,7 +2394,7 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
             }
         }
 
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << kfid << ", ";
 
         map_pkfs.emplace(kfid, pkf);
@@ -2427,15 +2425,15 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     Eigen::Matrix<double,6,1> verr = (Tcurloop * Tloop_new).log();
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n Loop Error : " << verr.norm() << " / " 
     //         << verr.transpose() << "\n";
 
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_setup");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_PoseGraph_setup");
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_PoseGraph_Optimize");
 
     ceres::Solver::Options options;
@@ -2445,29 +2443,29 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
     options.max_num_iterations = 10;
     options.function_tolerance = 1.e-4;
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Optimize");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_PoseGraph_Optimize");
 
     auto newkfpose = map_id_posespar_.at(newframe.kfid_);
     Sophus::SE3d newoptTwc = newkfpose.getPose();
 
-    // if( pslamstate_->debug_ ) {
+    // if( poptions_->debug_ ) {
     //     std::cout << "\nLC p3p pos : " << newTwc.translation().transpose() << "\n";
     //     std::cout << "\nLC opt pos : " << newoptTwc.translation().transpose() << "\n";
     // }
 
     if( (newTwc.translation() - newoptTwc.translation()).norm() > 0.3
-            && pslamstate_->stereo_ ) 
+            && poptions_->stereo_ ) 
     {
-        // if( pslamstate_->debug_ )
+        // if( poptions_->debug_ )
         //     std::cout << "\n [PoseGraph] Skipping as we are most likely with a degenerate solution!";
 
         return false;
@@ -2521,7 +2519,7 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     std::lock_guard<std::mutex> lock(pmap_->map_mutex_);
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_PoseGraph_Update");
 
     // Propagate corrections to youngest KFs / MPs
@@ -2584,8 +2582,8 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     pmap_->pcurframe_->setTwc(updTwcur);
     
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Update");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_PoseGraph_Update");
 
     return true;
 }
@@ -2593,14 +2591,14 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
 void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids) 
 {
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_StructBA_setup");
 
     ceres::Problem problem;
     ceres::LossFunctionWrapper *loss_function;
     
     // Chi2 thresh.
-    const float mono_th = pslamstate_->robust_mono_th_;
+    const float mono_th = poptions_->robust_mono_th_;
 
     loss_function = new ceres::LossFunctionWrapper(new ceres::HuberLoss(std::sqrt(mono_th)), ceres::TAKE_OWNERSHIP);
 
@@ -2627,7 +2625,7 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
     Sophus::SE3d Trl, Tlr;
     PoseParametersBlock rlextrinpose(0, Trl);
 
-    if( pslamstate_->stereo_ ) {
+    if( poptions_->stereo_ ) {
         // Right Intrinsic
         rightcalibpar = CalibParametersBlock(0, pcalibright->fx_, pcalibright->fy_, pcalibright->cx_, pcalibright->cy_);
         problem.AddParameterBlock(rightcalibpar.values(), 4);
@@ -2730,10 +2728,10 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
         }
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_setup");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_StructBA_setup");
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_StructBA_Optimize");
 
     ceres::Solver::Options options;
@@ -2748,22 +2746,22 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
     options.function_tolerance = 1.e-3;
     options.max_solver_time_in_seconds = 0.01;
 
-    if( !pslamstate_->bforce_realtime_ ) {
+    if( !poptions_->bforce_realtime_ ) {
         options.max_solver_time_in_seconds *= 2.;
     }
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Optimize");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_StructBA_Optimize");
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    // if( poptions_->debug_ || poptions_->log_timings_ )
     //     Profiler::Start("2.LC_StructBA_Update");
 
     for( const auto &lmid : vlm2optids ) 
@@ -2775,8 +2773,8 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
         }
     }
 
-    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Update");
+    // if( poptions_->debug_ || poptions_->log_timings_ )
+    //     Profiler::StopAndDisplay(poptions_->debug_, "2.LC_StructBA_Update");
 }
 
 
@@ -2813,7 +2811,7 @@ bool Optimizer::fullPoseGraph(std::vector<Sophus::SE3d, Eigen::aligned_allocator
         problem.AddResidualBlock(f, nullptr, map_id_posespar_.at(i-1).values(), map_id_posespar_.at(i).values());
     }
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n\n - [fullPoseGraph] Going to optimize over " << nbkfs 
     //         << " KFs / " << nbposes << " poses in total!\n\n";
 
@@ -2824,18 +2822,18 @@ bool Optimizer::fullPoseGraph(std::vector<Sophus::SE3d, Eigen::aligned_allocator
     options.max_num_iterations = 100;
     options.function_tolerance = 1.e-6;
     
-    options.minimizer_progress_to_stdout = pslamstate_->debug_;
+    options.minimizer_progress_to_stdout = poptions_->debug_;
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << summary.FullReport() << std::endl;
     
     // std::ofstream f;
     // std::string filename = "ov2slam_full_traj_wlc_opt.txt";
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\n Going to write the full Pose Graph trajectory into : " 
     //         << filename << "\n";
 
@@ -2858,7 +2856,7 @@ bool Optimizer::fullPoseGraph(std::vector<Sophus::SE3d, Eigen::aligned_allocator
 
     // f.close();
 
-    // if( pslamstate_->debug_ )
+    // if( poptions_->debug_ )
     //     std::cout << "\nFullPoseGrah Trajectory w. LC file written!\n";
 
     return true;

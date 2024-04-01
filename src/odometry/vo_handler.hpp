@@ -49,7 +49,7 @@ class SlamManager {
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-    SlamManager(std::shared_ptr<SlamParams> pstate);
+    SlamManager(std::shared_ptr<Options> pstate);
 
     void run();
 
@@ -79,7 +79,7 @@ public:
     bool bframe_viz_ison_ = false;
     bool bkf_viz_ison_ = false;
 
-    std::shared_ptr<SlamParams> pslamstate_;
+    std::shared_ptr<Options> poptions_;
 
     std::shared_ptr<CameraCalibration> pcalib_model_left_;
     std::shared_ptr<CameraCalibration> pcalib_model_right_;
