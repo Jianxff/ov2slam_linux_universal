@@ -1,25 +1,42 @@
-# OV²SLAM Linux_Universal
+# ov2slam_wasm
 
-Linux universal version of OV²SLAM, using Pangolin to visualize the results.
+This branch is the **WebAssembly** version of [OV²SLAM](https://github.com/ov2slam/ov2slam). Check the original repo for detail.
 
-Refer to original repo for details: [OV²SLAM](https://github.com/ov2slam/ov2slam)
+And now it supports:
+- mono/stereo odometry
+- mono/stereo odometry with graph optimize
 
-### Modify
-- Use `Pangolin` to visualize simply, inspired by [ORB-SLAM2](https://github.com/raulmur/ORB_SLAM2)
-- Delete original ros_based functions
-- Fix bugs for `multiple definitions` of static variables in `logger.hpp`
-- Simplify `CMakeLists.txt`, but should make some settings manually
+**No Loop-Closure**.
+**Single-Threading**.
+**Still on working**
 
-### Example
-Add an example for euroc_mono dataset. Worked in accurate mode on Ubuntu-20.04.
+#### notes
 
-**Run Command:**
+
+#### build
+Make sure you have installed:
+- OpenCV 4.x
+- Eigen 3.4.0
+- OpenGV
+- Sophus
+- Ceres-Solver
+
+And build them with [emscripten](https://emscripten.org/).
+
+And install them to the emsdk dir.
+
+Then run the following commands:
+```sh
+# clone the repo
+cd ov2slam_universal
+git checkout origin/wasm
+
+mkdir build
+cd build
+
+# activate emsdk
+source /path/to/emsdk/emsdk_env.sh
+
+emcmake cmake ..
+emmake make -j4
 ```
-cd example
-
-./mono_euroc ../parameters_files/acurrate/euroc/euroc_mono.yaml ${path_to_euroc_dataset}/mav0/cam0/data euroc_ts/${matched_timestamps_file}
-```
-
-**Preview:**
-
-![euroc_mono_accurate](support_files/euroc_mono_accurate.png)
