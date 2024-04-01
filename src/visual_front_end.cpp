@@ -41,8 +41,8 @@ bool VisualFrontEnd::visualTracking(cv::Mat &iml, double time)
 {
     std::lock_guard<std::mutex> lock(pmap_->map_mutex_);
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("0.Full-Front_End");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("0.Full-Front_End");
 
     bool iskfreq = trackMono(iml, time);
 
@@ -54,8 +54,8 @@ bool VisualFrontEnd::visualTracking(cv::Mat &iml, double time)
         }
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "0.Full-Front_End");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "0.Full-Front_End");
 
     return iskfreq;
 }
@@ -64,11 +64,11 @@ bool VisualFrontEnd::visualTracking(cv::Mat &iml, double time)
 // Perform tracking in one image, update kps and MP obs, return true if a new KF is req.
 bool VisualFrontEnd::trackMono(cv::Mat &im, double time)
 {
-    if( pslamstate_->debug_ )
-        std::cout << "\n\n - [Visual-Front-End]: Track Mono Image\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n\n - [Visual-Front-End]: Track Mono Image\n";
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("1.FE_Track-Mono");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("1.FE_Track-Mono");
 
     // Preprocess the new image
     preprocessImage(im);
@@ -121,8 +121,8 @@ bool VisualFrontEnd::trackMono(cv::Mat &im, double time)
     // Check if New KF req.
     bool is_kf_req = checkNewKfReq();
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "1.FE_Track-Mono");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.FE_Track-Mono");
 
     return is_kf_req;
 }
@@ -131,8 +131,8 @@ bool VisualFrontEnd::trackMono(cv::Mat &im, double time)
 // KLT Tracking with motion prior
 void VisualFrontEnd::kltTracking()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_KLT-Tracking");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_KLT-Tracking");
 
     // Get current kps and init priors for tracking
     std::vector<int> v3dkpids, vkpids;
@@ -220,10 +220,10 @@ void VisualFrontEnd::kltTracking()
             }
         }
 
-        if( pslamstate_->debug_ ) {
-            std::cout << "\n >>> KLT Tracking w. priors : " << nbgood;
-            std::cout << " out of " << nbkps << " kps tracked!\n";
-        }
+        // if( pslamstate_->debug_ ) {
+        //     std::cout << "\n >>> KLT Tracking w. priors : " << nbgood;
+        //     std::cout << " out of " << nbkps << " kps tracked!\n";
+        // }
 
         if( nbgood < 0.33 * nbkps ) {
             // Motion model might be quite wrong, P3P is recommended next
@@ -264,21 +264,21 @@ void VisualFrontEnd::kltTracking()
             }
         }
 
-        if( pslamstate_->debug_ ) {
-            std::cout << "\n >>> KLT Tracking no prior : " << nbgood;
-            std::cout << " out of " << nbkps << " kps tracked!\n";
-        }
+        // if( pslamstate_->debug_ ) {
+        //     std::cout << "\n >>> KLT Tracking no prior : " << nbgood;
+        //     std::cout << " out of " << nbkps << " kps tracked!\n";
+        // }
     } 
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_KLT-Tracking");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_KLT-Tracking");
 }
 
 
 void VisualFrontEnd::kltTrackingFromKF()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_KLT-Tracking-from-KF");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_KLT-Tracking-from-KF");
 
     // Get current kps and init priors for tracking
     std::vector<int> v3dkpids, vkpids;
@@ -387,10 +387,10 @@ void VisualFrontEnd::kltTrackingFromKF()
             }
         }
 
-        if( pslamstate_->debug_ ) {
-            std::cout << "\n >>> KLT Tracking w. priors : " << nbgood;
-            std::cout << " out of " << nbkps << " kps tracked!\n";
-        }
+        // if( pslamstate_->debug_ ) {
+        //     std::cout << "\n >>> KLT Tracking w. priors : " << nbgood;
+        //     std::cout << " out of " << nbkps << " kps tracked!\n";
+        // }
 
         if( nbgood < 0.33 * nbkps ) {
             // Motion model might be quite wrong, P3P is recommended next
@@ -431,22 +431,22 @@ void VisualFrontEnd::kltTrackingFromKF()
             }
         }
 
-        if( pslamstate_->debug_ ) {
-            std::cout << "\n >>> KLT Tracking no prior : " << nbgood;
-            std::cout << " out of " << nbkps << " kps tracked!\n";
-        }
+        // if( pslamstate_->debug_ ) {
+        //     std::cout << "\n >>> KLT Tracking no prior : " << nbgood;
+        //     std::cout << " out of " << nbkps << " kps tracked!\n";
+        // }
     } 
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_KLT-Tracking");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_KLT-Tracking");
 }
 
 
 // This function apply a 2d-2d based outliers filtering
 void VisualFrontEnd::epipolar2d2dFiltering()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_EpipolarFiltering");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_EpipolarFiltering");
     
     // Get prev. KF (direct access as Front-End is thread safe)
     auto pkf = pmap_->map_pkfs_.at(pcurframe_->kfid_);
@@ -460,8 +460,8 @@ void VisualFrontEnd::epipolar2d2dFiltering()
     size_t nbkps = pcurframe_->nbkps_;
 
     if( nbkps < 8 ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\nNot enough kps to compute Essential Matrix\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\nNot enough kps to compute Essential Matrix\n";
         return;
     }
 
@@ -519,8 +519,8 @@ void VisualFrontEnd::epipolar2d2dFiltering()
     }
 
     if( nbkps < 8 ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\nNot enough kps to compute Essential Matrix\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\nNot enough kps to compute Essential Matrix\n";
         return;
     }
 
@@ -528,9 +528,9 @@ void VisualFrontEnd::epipolar2d2dFiltering()
     avg_parallax /= nbparallax;
 
     if( avg_parallax < 2. * pslamstate_->fransac_err_ ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\n \t>>> Not enough parallax (" << avg_parallax 
-                << " px) to compute 5-pt Essential Matrix\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n \t>>> Not enough parallax (" << avg_parallax 
+        //         << " px) to compute 5-pt Essential Matrix\n";
         return;
     }
 
@@ -546,15 +546,15 @@ void VisualFrontEnd::epipolar2d2dFiltering()
     Eigen::Matrix3d Rkfc;
     Eigen::Vector3d tkfc;
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n \t>>> 5-pt EssentialMatrix Ransac :";
-        std::cout << "\n \t>>> only on 3d kps : " << epifrom3dkps;
-        std::cout << "\n \t>>> nb pts : " << nbkps;
-        std::cout << " / avg. parallax : " << avg_parallax;
-        std::cout << " / nransac_iter_ : " << pslamstate_->nransac_iter_;
-        std::cout << " / fransac_err_ : " << pslamstate_->fransac_err_;
-        std::cout << "\n\n";
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n \t>>> 5-pt EssentialMatrix Ransac :";
+    //     std::cout << "\n \t>>> only on 3d kps : " << epifrom3dkps;
+    //     std::cout << "\n \t>>> nb pts : " << nbkps;
+    //     std::cout << " / avg. parallax : " << avg_parallax;
+    //     std::cout << " / nransac_iter_ : " << pslamstate_->nransac_iter_;
+    //     std::cout << " / fransac_err_ : " << pslamstate_->fransac_err_;
+    //     std::cout << "\n\n";
+    // }
     
     bool success = 
         MultiViewGeometry::compute5ptEssentialMatrix(
@@ -568,18 +568,18 @@ void VisualFrontEnd::epipolar2d2dFiltering()
                     Rkfc, tkfc, 
                     voutliersidx);
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n \t>>> Epipolar nb outliers : " << voutliersidx.size();
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n \t>>> Epipolar nb outliers : " << voutliersidx.size();
 
     if( !success) {
-        if( pslamstate_->debug_ )
-            std::cout << "\n \t>>> No pose could be computed from 5-pt EssentialMatrix\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n \t>>> No pose could be computed from 5-pt EssentialMatrix\n";
         return;
     }
 
     if( voutliersidx.size() > 0.5 * vkfbvs.size() ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\n \t>>> Too many outliers, skipping as might be degenerate case\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n \t>>> Too many outliers, skipping as might be degenerate case\n";
         return;
     }
 
@@ -610,8 +610,8 @@ void VisualFrontEnd::epipolar2d2dFiltering()
     // In case we only used 3d kps for computing E (stereo mode)
     if( epifrom3dkps ) {
 
-        if( pslamstate_->debug_ )
-            std::cout << "\n Applying found Essential Mat to 2D kps!\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n Applying found Essential Mat to 2D kps!\n";
 
         Sophus::SE3d Tidentity;
         Sophus::SE3d Tkfcur(Rkfc, tkfc);
@@ -647,26 +647,26 @@ void VisualFrontEnd::epipolar2d2dFiltering()
             pmap_->removeObsFromCurFrameById(kpid);
         }
 
-        if( pslamstate_->debug_ )
-            std::cout << "\n Nb of 2d kps removed : " << vbadkpids.size() << " \n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n Nb of 2d kps removed : " << vbadkpids.size() << " \n";
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_EpipolarFiltering");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_EpipolarFiltering");
 }
 
 
 void VisualFrontEnd::computePose()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_computePose");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_computePose");
 
     // Get cur nb of 3D kps    
     size_t nb3dkps = pcurframe_->nb3dkps_;
 
     if( nb3dkps < 4 ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\n \t>>> Not enough kps to compute P3P / PnP\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n \t>>> Not enough kps to compute P3P / PnP\n";
         return;
     }
 
@@ -717,13 +717,13 @@ void VisualFrontEnd::computePose()
 
     if( bdop3p ) 
     {
-        if( pslamstate_->debug_ ) {
-            std::cout << "\n \t>>>P3P Ransac : ";
-            std::cout << "\n \t>>> nb 3d pts : " << nb3dkps;
-            std::cout << " / nransac_iter_ : " << pslamstate_->nransac_iter_;
-            std::cout << " / fransac_err_ : " << pslamstate_->fransac_err_;
-            std::cout << "\n\n";
-        }
+        // if( pslamstate_->debug_ ) {
+        //     std::cout << "\n \t>>>P3P Ransac : ";
+        //     std::cout << "\n \t>>> nb 3d pts : " << nb3dkps;
+        //     std::cout << " / nransac_iter_ : " << pslamstate_->nransac_iter_;
+        //     std::cout << " / fransac_err_ : " << pslamstate_->fransac_err_;
+        //     std::cout << "\n\n";
+        // }
 
         // Only effective with OpenGV
         bool use_lmeds = true;
@@ -741,8 +741,8 @@ void VisualFrontEnd::computePose()
                             voutliersidx,
                             use_lmeds);
 
-        if( pslamstate_->debug_ )
-            std::cout << "\n \t>>> P3P-LMeds nb outliers : " << voutliersidx.size();
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n \t>>> P3P-LMeds nb outliers : " << voutliersidx.size();
 
         // Check that pose estim. was good enough
         size_t nbinliers = vwpts.size() - voutliersidx.size();
@@ -752,8 +752,8 @@ void VisualFrontEnd::computePose()
             || Twc.translation().array().isInf().any()
             || Twc.translation().array().isNaN().any() )
         {
-            if( pslamstate_->debug_ )
-                std::cout << "\n \t>>> Not enough inliers for reliable pose est. Resetting KF state\n";
+            // if( pslamstate_->debug_ )
+            //     std::cout << "\n \t>>> Not enough inliers for reliable pose est. Resetting KF state\n";
 
             resetFrame();
 
@@ -803,8 +803,8 @@ void VisualFrontEnd::computePose()
     // Check that pose estim. was good enough
     size_t nbinliers = vwpts.size() - voutliersidx.size();
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n \t>>> Ceres PnP nb outliers : " << voutliersidx.size();
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n \t>>> Ceres PnP nb outliers : " << voutliersidx.size();
 
     if( !success
         || nbinliers < 5
@@ -818,8 +818,8 @@ void VisualFrontEnd::computePose()
         }
         else if( pslamstate_->mono_ ) {
 
-            if( pslamstate_->debug_ )
-                std::cout << "\n \t>>> Not enough inliers for reliable pose est. Resetting KF state\n";
+            // if( pslamstate_->debug_ )
+            //     std::cout << "\n \t>>> Not enough inliers for reliable pose est. Resetting KF state\n";
 
             resetFrame();
         } 
@@ -846,8 +846,8 @@ void VisualFrontEnd::computePose()
         pmap_->removeObsFromCurFrameById(vkpids.at(idx));
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_computePose");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_computePose");
 }
 
 
@@ -985,8 +985,8 @@ bool VisualFrontEnd::checkReadyForInit()
 
 bool VisualFrontEnd::checkNewKfReq()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_checkNewKfReq");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_checkNewKfReq");
 
     // Get prev. KF
     auto pkfit = pmap_->map_pkfs_.find(pcurframe_->kfid_);
@@ -1044,18 +1044,18 @@ bool VisualFrontEnd::checkNewKfReq()
     
     bool bkfreq = (c0 || c1 || c2) && cx;
 
-    if( bkfreq && pslamstate_->debug_ ) {
+    // if( bkfreq && pslamstate_->debug_ ) {
         
-        std::cout << "\n\n----------------------------------------------------------------------";
-        std::cout << "\n>>> Check Keyframe conditions :";
-        std::cout << "\n> pcurframe_->id_ = " << pcurframe_->id_ << " / prev kf frame_id : " << pkf->id_;
-        std::cout << "\n> Prev KF nb 3d kps = " << pkf->nb3dkps_ << " / Cur Frame = " << pcurframe_->nb3dkps_;
-        std::cout << " / Cur Frame occup cells = " << pcurframe_->noccupcells_ << " / parallax = " << med_rot_parallax;
-        std::cout << "\n-------------------------------------------------------------------\n\n";
-    }
+    //     std::cout << "\n\n----------------------------------------------------------------------";
+    //     std::cout << "\n>>> Check Keyframe conditions :";
+    //     std::cout << "\n> pcurframe_->id_ = " << pcurframe_->id_ << " / prev kf frame_id : " << pkf->id_;
+    //     std::cout << "\n> Prev KF nb 3d kps = " << pkf->nb3dkps_ << " / Cur Frame = " << pcurframe_->nb3dkps_;
+    //     std::cout << " / Cur Frame occup cells = " << pcurframe_->noccupcells_ << " / parallax = " << med_rot_parallax;
+    //     std::cout << "\n-------------------------------------------------------------------\n\n";
+    // }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_checkNewKfReq");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_checkNewKfReq");
 
     return bkfreq;
 }
@@ -1069,9 +1069,9 @@ float VisualFrontEnd::computeParallax(const int kfid, bool do_unrot, bool bmedia
     auto pkfit = pmap_->map_pkfs_.find(kfid);
     
     if( pkfit == pmap_->map_pkfs_.end() ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\n[Visual Front End] Error in computeParallax ! Prev KF #" 
-                    << kfid << " does not exist!\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n[Visual Front End] Error in computeParallax ! Prev KF #" 
+        //             << kfid << " does not exist!\n";
         return 0.;
     }
 
@@ -1142,8 +1142,8 @@ float VisualFrontEnd::computeParallax(const int kfid, bool do_unrot, bool bmedia
 
 void VisualFrontEnd::preprocessImage(cv::Mat &img_raw)
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_TM_preprocessImage");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_TM_preprocessImage");
 
     // Set cur raw img
     // left_raw_img_ = img_raw;
@@ -1176,8 +1176,8 @@ void VisualFrontEnd::preprocessImage(cv::Mat &img_raw)
         cv::buildOpticalFlowPyramid(cur_img_, cur_pyr_, pslamstate_->klt_win_size_, pslamstate_->nklt_pyr_lvl_);
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_preprocessImage");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_TM_preprocessImage");
 }
 
 

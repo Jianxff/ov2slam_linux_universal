@@ -83,81 +83,87 @@ public:
     Sophus::SE3d T_left_right_;
 
     // SLAM settings
-    bool debug_, log_timings_;
+    bool debug_ = false;
+    bool log_timings_ = false;
 
-    bool mono_, stereo_;
+    bool mono_ = true; 
+    bool stereo_ = false;
 
-    bool slam_mode_;
+    bool slam_mode_ = true;
 
-    bool buse_loop_closer_;
+    bool buse_loop_closer_ = false;
     int lckfid_ = -1;
 
-    float finit_parallax_;
+    float finit_parallax_ = 20;
     
-    bool bdo_stereo_rect_;
-    double alpha_;
+    bool bdo_stereo_rect_ = false;
+    double alpha_ = 0;
 
-    bool bdo_undist_;
+    bool bdo_undist_ = false;
 
     // Keypoints Extraction
-    bool use_fast_, use_shi_tomasi_, use_brief_;
-    bool use_singlescale_detector_;
+    bool use_fast_ = true;
+    bool use_shi_tomasi_ = false;
+    bool use_singlescale_detector_ = false;
+    bool use_brief_ = false;
     
-    int nfast_th_;
-    int nbmaxkps_, nmaxdist_;
-    double dmaxquality_;
+    int nfast_th_ = 10;
+    int nbmaxkps_;
+    int nmaxdist_ = 45;
+    double dmaxquality_ = 0.001;
 
     // Image Processing
-    bool use_clahe_;
-    float fclahe_val_;
+    bool use_clahe_ = false;
+    float fclahe_val_ = 3;
 
     // KLT Parameters
-    bool do_klt_, klt_use_prior_;
-    bool btrack_keyframetoframe_;
-    int nklt_win_size_, nklt_pyr_lvl_;
+    bool do_klt_ = true, klt_use_prior_ = true;
+    bool btrack_keyframetoframe_ = false;
+    int nklt_win_size_ = 9;
+    int nklt_pyr_lvl_ = 3;
     cv::Size klt_win_size_;
 
-    float fmax_fbklt_dist_;
-    int nmax_iter_;
-    float fmax_px_precision_;
+    float fmax_fbklt_dist_ = 0.5;
+    int nmax_iter_ = 30;
+    float fmax_px_precision_ = 0.01;
 
-    int nklt_err_;
+    int nklt_err_ = 30;
 
     // Matching th.
-    bool bdo_track_localmap_;
+    bool bdo_track_localmap_ = true;
     
-    float fmax_desc_dist_;
-    float fmax_proj_pxdist_;
+    float fmax_desc_dist_ = 0.2;
+    float fmax_proj_pxdist_ = 2;
 
     // Error thresholds
-    bool doepipolar_;
-    bool dop3p_;
-    bool bdo_random; // RANDOMIZE RANSAC?
-    float fransac_err_;
-    int nransac_iter_;
+    bool doepipolar_ = true;
+    bool dop3p_ = false;
+    bool bdo_random = true; // RANDOMIZE RANSAC?
+    float fransac_err_ = 3;
+    int nransac_iter_ = 100;
     float fepi_th_;
 
-    float fmax_reproj_err_;
-    bool buse_inv_depth_;
+    float fmax_reproj_err_ = 3;
+    bool buse_inv_depth_ = 1;
 
     // Bundle Adjustment Parameters
     // (mostly related to Ceres options)
-    float robust_mono_th_;
+    float robust_mono_th_ = 5.9915;
     float robust_stereo_th_;
 
-    bool use_sparse_schur_; // If False, Dense Schur used
-    bool use_dogleg_; // If False, Lev.-Marq. used
-    bool use_subspace_dogleg_; // If False, Powell's trad. Dogleg used
-    bool use_nonmonotic_step_;
+    bool use_sparse_schur_ = true; // If False, Dense Schur used
+    bool use_dogleg_ = false; // If False, Lev.-Marq. used
+    bool use_subspace_dogleg_ = false; // If False, Powell's trad. Dogleg used
+    bool use_nonmonotic_step_ = false;
 
     // Estimator parameters
-    bool apply_l2_after_robust_; // If true, a L2 optim is applied to refine the results from robust cost function
+    bool apply_l2_after_robust_ = true; // If true, a L2 optim is applied to refine the results from robust cost function
 
-    int nmin_covscore_; // Number of common observations req. for opt. a KF in localBA
+    int nmin_covscore_ = 25; // Number of common observations req. for opt. a KF in localBA
 
     // Map Filtering parameters
-    float fkf_filtering_ratio_;
+    float fkf_filtering_ratio_ = 0.9;
 
     // Final BA
-    bool do_full_ba_;
+    bool do_full_ba_ = false;
 };

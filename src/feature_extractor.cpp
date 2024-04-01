@@ -82,14 +82,14 @@ FeatureExtractor::FeatureExtractor(size_t nmaxpts, size_t nmaxdist, double dmaxq
     nmindist_ = nmaxdist / 2.;
     dminquality_ = dmaxquality / 2.;
 
-    std::cout << "\n*********************************\n";
-    std::cout << "\nFeature Extractor is constructed!\n";
-    std::cout << "\n>>> Maximum nb of kps : " << nmaxpts_;
-    std::cout << "\n>>> Maximum kps dist : " << nmaxdist_;
-    std::cout << "\n>>> Minimum kps dist : " << nmindist_;
-    std::cout << "\n>>> Maximum kps qual : " << dmaxquality_;
-    std::cout << "\n>>> Minimum kps qual : " << dminquality_;
-    std::cout << "\n*********************************\n";
+    // std::cout << "\n*********************************\n";
+    // std::cout << "\nFeature Extractor is constructed!\n";
+    // std::cout << "\n>>> Maximum nb of kps : " << nmaxpts_;
+    // std::cout << "\n>>> Maximum kps dist : " << nmaxdist_;
+    // std::cout << "\n>>> Minimum kps dist : " << nmindist_;
+    // std::cout << "\n>>> Maximum kps qual : " << dmaxquality_;
+    // std::cout << "\n>>> Minimum kps qual : " << dminquality_;
+    // std::cout << "\n*********************************\n";
 }
 
 

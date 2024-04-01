@@ -41,8 +41,8 @@ MapManager::MapManager(std::shared_ptr<SlamParams> pstate, std::shared_ptr<Frame
 // the new KF are added to the map.
 void MapManager::createKeyframe(const cv::Mat &im, const cv::Mat &imraw)
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("1.FE_createKeyframe");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("1.FE_createKeyframe");
 
     // Prepare Frame to become a KF
     // (Update observations between MPs / KFs)
@@ -54,16 +54,16 @@ void MapManager::createKeyframe(const cv::Mat &im, const cv::Mat &imraw)
     // Add KF to the map
     addKeyframe();
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "1.FE_createKeyframe");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.FE_createKeyframe");
 }
 
 // Prepare Frame to become a KF
 // (Update observations between MPs / KFs)
 void MapManager::prepareFrame()
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_CF_prepareFrame");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_CF_prepareFrame");
 
     // Update new KF id
     pcurframe_->kfid_ = nkfid_;
@@ -108,14 +108,14 @@ void MapManager::prepareFrame()
         plmit->second->addKfObs(nkfid_);
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_prepareFrame");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_prepareFrame");
 }
 
 void MapManager::updateFrameCovisibility(Frame &frame)
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("1.KF_updateFrameCovisilbity");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("1.KF_updateFrameCovisilbity");
 
     // Update the MPs and the covisilbe graph between KFs
     std::map<int,int> map_covkfs;
@@ -186,8 +186,8 @@ void MapManager::updateFrameCovisibility(Frame &frame)
         frame.set_local_mapids_.insert(set_local_mapids.begin(), set_local_mapids.end());
     }
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_updateFrameCovisilbity");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_updateFrameCovisilbity");
 }
 
 void MapManager::addKeypointsToFrame(const cv::Mat &im, const std::vector<cv::Point2f> &vpts, Frame &frame)
@@ -283,8 +283,8 @@ void MapManager::addKeypointsToFrame(const cv::Mat &im, const std::vector<cv::Po
 // Extract new kps into provided image and update cur. Frame
 void MapManager::extractKeypoints(const cv::Mat &im, const cv::Mat &imraw)
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.FE_CF_extractKeypoints");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.FE_CF_extractKeypoints");
 
     std::vector<Keypoint> vkps = pcurframe_->getKeypoints();
 
@@ -334,8 +334,8 @@ void MapManager::extractKeypoints(const cv::Mat &im, const cv::Mat &imraw)
         }
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_extractKeypoints");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.FE_CF_extractKeypoints");
 }
 
 
@@ -364,8 +364,8 @@ void MapManager::describeKeypoints(const cv::Mat &im, const std::vector<Keypoint
 // for the means of triangulation
 void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftpyr, const std::vector<cv::Mat> &vrightpyr) 
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("1.KF_stereoMatching");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("1.KF_stereoMatching");
 
     // Find stereo correspondances with left kps
     auto vleftkps = frame.getKeypoints();
@@ -534,9 +534,9 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
             }
         }
 
-        if( pslamstate_->debug_ ) 
-            std::cout << "\n >>> Stereo KLT Tracking on priors : " << nbgood 
-                << " out of " << nb3dkps << " kps tracked!\n";
+        // if( pslamstate_->debug_ ) 
+        //     std::cout << "\n >>> Stereo KLT Tracking on priors : " << nbgood 
+        //         << " out of " << nb3dkps << " kps tracked!\n";
     }
 
     // 2nd track other kps if any
@@ -568,9 +568,9 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
             }
         }
 
-        if( pslamstate_->debug_ )
-            std::cout << "\n >>> Stereo KLT Tracking w. no priors : " << nbgood
-                << " out of " << nb2dkps << " kps tracked!\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n >>> Stereo KLT Tracking w. no priors : " << nbgood
+        //         << " out of " << nb2dkps << " kps tracked!\n";
     }
 
     nbkps = vgoodids.size();
@@ -600,12 +600,12 @@ void MapManager::stereoMatching(Frame &frame, const std::vector<cv::Mat> &vleftp
         }
     }
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n \t>>> Nb of stereo tracks: " << nbgood
-            << " out of " << nbkps << "\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n \t>>> Nb of stereo tracks: " << nbgood
+    //         << " out of " << nbkps << "\n";
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_stereoMatching");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "1.KF_stereoMatching");
 }
 
 
@@ -766,16 +766,16 @@ void MapManager::mergeMapPoints(const int prevlmid, const int newlmid)
     auto pnewlmit = map_plms_.find(newlmid);
 
     if( pprevlmit == map_plms_.end() ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\nMergeMapPoints skipping as prevlm is null\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\nMergeMapPoints skipping as prevlm is null\n";
         return;
     } else if( pnewlmit == map_plms_.end() ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\nMergeMapPoints skipping as newlm is null\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\nMergeMapPoints skipping as newlm is null\n";
         return;
     } else if ( !pnewlmit->second->is3d_ ) {
-        if( pslamstate_->debug_ )
-            std::cout << "\nMergeMapPoints skipping as newlm is not 3d\n";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\nMergeMapPoints skipping as newlm is not 3d\n";
         return;
     }
 
@@ -859,8 +859,8 @@ void MapManager::removeKeyframe(const int kfid)
     map_pkfs_.erase( pkfit );
     nbkfs_--;
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n \t >>> removeKeyframe() --> Removed KF #" << kfid;
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n \t >>> removeKeyframe() --> Removed KF #" << kfid;
 }
 
 // Remove a MP from the map

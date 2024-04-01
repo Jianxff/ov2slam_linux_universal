@@ -33,8 +33,8 @@
 
 void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.BA_SetupPb");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.BA_SetupPb");
 
     // =================================
     //      Setup BA Problem
@@ -138,9 +138,9 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     std::unordered_set<int> set_kfids2opt;
     std::unordered_set<int> set_cstkfids;
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n >>> Local BA : new KF is #" << newframe.kfid_ 
-            << " -- with covisible graph of size : " << map_covkfs.size();
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n >>> Local BA : new KF is #" << newframe.kfid_ 
+    //         << " -- with covisible graph of size : " << map_covkfs.size();
 
     bool all_cst = false;
 
@@ -410,24 +410,24 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     size_t nbkfs2opt = nbkfstot - nbcstkfs;
     size_t nblms2opt = map_local_plms.size();
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n\n >>> LocalBA problem setup!";
-        std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
-            << " / " << nbkfstot;
-        std::cout << "\n >>> MPs added : " << nblms2opt;
-        std::cout << "\n >>> Measuremetns added (mono / stereo) : " 
-            << nbmono << " / " << nbstereo;
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n\n >>> LocalBA problem setup!";
+    //     std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
+    //         << " / " << nbkfstot;
+    //     std::cout << "\n >>> MPs added : " << nblms2opt;
+    //     std::cout << "\n >>> Measuremetns added (mono / stereo) : " 
+    //         << nbmono << " / " << nbstereo;
 
-        std::cout << "\n\n >>> KFs added : ";
-        for( const auto &id_pkf : map_local_pkfs ) {
-            std::cout << " KF #" << id_pkf.first << " (cst : " << set_cstkfids.count(id_pkf.first) << "), ";
-        }
+    //     std::cout << "\n\n >>> KFs added : ";
+    //     for( const auto &id_pkf : map_local_pkfs ) {
+    //         std::cout << " KF #" << id_pkf.first << " (cst : " << set_cstkfids.count(id_pkf.first) << "), ";
+    //     }
 
-        std::cout << "\n\n >>> KFs in cov map : ";
-        for( const auto &id_score : map_covkfs ) {
-            std::cout << " KF #" << id_score.first << " (cov score : " << id_score.second << "), ";
-        }
-    }
+    //     std::cout << "\n\n >>> KFs in cov map : ";
+    //     for( const auto &id_score : map_covkfs ) {
+    //         std::cout << " KF #" << id_score.first << " (cov score : " << id_score.second << "), ";
+    //     }
+    // }
 
     // =================================
     //      Solve BA Problem
@@ -469,20 +469,20 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
     
     options.minimizer_progress_to_stdout = pslamstate_->debug_;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_SetupPb");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_SetupPb");
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.BA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.BA_Optimize");
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Optimize");
 
 
     // =================================
@@ -612,22 +612,22 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
         options.max_solver_time_in_seconds /= 2.;
         // options.max_solver_time_in_seconds = 0.05;
         
-        if( pslamstate_->debug_ )
-            Profiler::Start("2.BA_L2-Refinement");
+        // if( pslamstate_->debug_ )
+        //     Profiler::Start("2.BA_L2-Refinement");
 
         ceres::Solve(options, &problem, &summary);
 
         bl2optimdone = true;
 
-        if( pslamstate_->debug_ )
-            std::cout << summary.FullReport() << std::endl;
+        // if( pslamstate_->debug_ )
+        //     std::cout << summary.FullReport() << std::endl;
 
-        if( pslamstate_->debug_ )
-            Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_L2-Refinement");
+        // if( pslamstate_->debug_ )
+        //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_L2-Refinement");
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.BA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.BA_Update");
 
     // =================================
     //      Remove outliers
@@ -883,15 +883,15 @@ void Optimizer::localBA(Frame &newframe, const bool buse_robust_cost)
 
     nbbadobs = nbbadobsmono + nbbadobsrightcam;
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n \t>>> localBA() --> Nb of bad obs / nb removed MP : " 
-            << nbbadobs << " / " << nbbadlm;
-        std::cout << "\n \t>>> localBA() --> Nb of bad obs mono / right : " 
-            << nbbadobsmono << " / " << nbbadobsrightcam;
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n \t>>> localBA() --> Nb of bad obs / nb removed MP : " 
+    //         << nbbadobs << " / " << nbbadlm;
+    //     std::cout << "\n \t>>> localBA() --> Nb of bad obs mono / right : " 
+    //         << nbbadobsmono << " / " << nbbadobsrightcam;
+    // }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.BA_Update");
 
     bstop_localba_ = false;
 }
@@ -905,8 +905,8 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
     Frame &newframe = *pmap_->getKeyframe(nkfid);
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_LooseBA_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_LooseBA_setup");
 
     ceres::Problem problem;
     ceres::LossFunctionWrapper *loss_function;
@@ -1300,23 +1300,23 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     
     options.minimizer_progress_to_stdout = pslamstate_->debug_;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_setup");
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_LooseBA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_LooseBA_Optimize");
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Optimize");
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_LooseBA_remove-outliers");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_LooseBA_remove-outliers");
 
 
     // =================================
@@ -1443,12 +1443,12 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
     Sophus::SE3d iniTnewkfw = newframe.getTcw();
     Sophus::SE3d optTwnewkf = map_id_posespar_.at(newframe.kfid_).getPose();
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n \t>>> looseBA() --> Kf loop old pos : " 
-            << iniTnewkfw.inverse().translation().transpose() << "\n";
-        std::cout << "\n \t>>> looseBA() --> Kf loop new pos : " 
-            << optTwnewkf.translation().transpose() << "\n";
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n \t>>> looseBA() --> Kf loop old pos : " 
+    //         << iniTnewkfw.inverse().translation().transpose() << "\n";
+    //     std::cout << "\n \t>>> looseBA() --> Kf loop new pos : " 
+    //         << optTwnewkf.translation().transpose() << "\n";
+    // }
 
     // Get Updated KFs
     for( const auto &kfid_pkf : map_local_pkfs )
@@ -1523,15 +1523,15 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
         }
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_remove-outliers");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_remove-outliers");
 
     std::lock_guard<std::mutex> lock2(pmap_->optim_mutex_);
 
     std::lock_guard<std::mutex> lock(pmap_->map_mutex_);
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_LooseBA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_LooseBA_Update");
 
     // Update KFs / MPs
     for( size_t i = 0, iend = vlmids.size() ; i < iend ; i++ )
@@ -1658,15 +1658,15 @@ void Optimizer::looseBA(int inikfid, const int nkfid, const bool buse_robust_cos
 
     size_t nbbadobs = nbbadobsmono + nbbadobsrightcam;
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n \t>>> looseBA() --> Nb of bad obs / nb removed MP : " 
-            << nbbadobs << " / " << nbbadlm;
-        std::cout << "\n \t>>> looseBA() --> Nb of bad obs mono / stereo / right : " 
-            << nbbadobsmono << " / " << nbbadobsrightcam;
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n \t>>> looseBA() --> Nb of bad obs / nb removed MP : " 
+    //         << nbbadobs << " / " << nbbadlm;
+    //     std::cout << "\n \t>>> looseBA() --> Nb of bad obs mono / stereo / right : " 
+    //         << nbbadobsmono << " / " << nbbadobsrightcam;
+    // }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_LooseBA_Update");
 }
 
 
@@ -1762,8 +1762,8 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     std::set<int> set_lmids2opt;
     std::set<int> set_cstkfids;
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n >>> Full BA \n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n >>> Full BA \n";
 
     // Add the KFs to optimize to BA (new KF + cov KFs)
     for( int kfid = 0 ; kfid <= pmap_->nkfid_ ; kfid++ )
@@ -2019,12 +2019,12 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     size_t nblms2opt = map_local_plms.size();
 
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\n >>> FullBA problem setup!";
-        std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
-            << " / " << nbkfstot;
-        std::cout << "\n >>> MPs added : " << nblms2opt;
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\n >>> FullBA problem setup!";
+    //     std::cout << "\n >>> Kfs added (opt / tot) : " << nbkfs2opt 
+    //         << " / " << nbkfstot;
+    //     std::cout << "\n >>> MPs added : " << nblms2opt;
+    // }
 
     ceres::Solver::Options options;
     options.linear_solver_ordering.reset(ordering);
@@ -2060,8 +2060,8 @@ void Optimizer::fullBA(const bool buse_robust_cost)
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
 
 
     size_t nbbadobsmono = 0;
@@ -2148,8 +2148,8 @@ void Optimizer::fullBA(const bool buse_robust_cost)
 
         ceres::Solve(options, &problem, &summary);
 
-        if( pslamstate_->debug_ )
-            std::cout << summary.FullReport() << std::endl;
+        // if( pslamstate_->debug_ )
+        //     std::cout << summary.FullReport() << std::endl;
     }
 
     nbbadobsmono = 0;
@@ -2346,22 +2346,22 @@ bool Optimizer::stopLocalBA()
 bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3d& newTwc)
 {
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_PoseGraph_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_PoseGraph_setup");
 
     ceres::Problem problem;
     
     std::map<int, PoseParametersBlock> map_id_posespar_;
     std::map<int, std::shared_ptr<Frame>> map_pkfs;
 
-    if( pslamstate_->debug_ ) 
-        std::cout << "\n Going to opt pose graph between KF #" << kfloop_id 
-            << " and KF #" << newframe.kfid_ << "\n";
+    // if( pslamstate_->debug_ ) 
+    //     std::cout << "\n Going to opt pose graph between KF #" << kfloop_id 
+    //         << " and KF #" << newframe.kfid_ << "\n";
 
     Sophus::SE3d iniTcw = newframe.getTcw();
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n Adding loop KF : ";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n Adding loop KF : ";
 
     auto ploopkf = pmap_->getKeyframe(kfloop_id);
 
@@ -2396,8 +2396,8 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
             }
         }
 
-        if( pslamstate_->debug_ )
-            std::cout << kfid << ", ";
+        // if( pslamstate_->debug_ )
+        //     std::cout << kfid << ", ";
 
         map_pkfs.emplace(kfid, pkf);
 
@@ -2427,16 +2427,16 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     Eigen::Matrix<double,6,1> verr = (Tcurloop * Tloop_new).log();
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n Loop Error : " << verr.norm() << " / " 
-            << verr.transpose() << "\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n Loop Error : " << verr.norm() << " / " 
+    //         << verr.transpose() << "\n";
 
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_setup");
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_PoseGraph_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_PoseGraph_Optimize");
 
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
@@ -2450,25 +2450,25 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Optimize");
 
     auto newkfpose = map_id_posespar_.at(newframe.kfid_);
     Sophus::SE3d newoptTwc = newkfpose.getPose();
 
-    if( pslamstate_->debug_ ) {
-        std::cout << "\nLC p3p pos : " << newTwc.translation().transpose() << "\n";
-        std::cout << "\nLC opt pos : " << newoptTwc.translation().transpose() << "\n";
-    }
+    // if( pslamstate_->debug_ ) {
+    //     std::cout << "\nLC p3p pos : " << newTwc.translation().transpose() << "\n";
+    //     std::cout << "\nLC opt pos : " << newoptTwc.translation().transpose() << "\n";
+    // }
 
     if( (newTwc.translation() - newoptTwc.translation()).norm() > 0.3
             && pslamstate_->stereo_ ) 
     {
-        if( pslamstate_->debug_ )
-            std::cout << "\n [PoseGraph] Skipping as we are most likely with a degenerate solution!";
+        // if( pslamstate_->debug_ )
+        //     std::cout << "\n [PoseGraph] Skipping as we are most likely with a degenerate solution!";
 
         return false;
     }
@@ -2521,8 +2521,8 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     std::lock_guard<std::mutex> lock(pmap_->map_mutex_);
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_PoseGraph_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_PoseGraph_Update");
 
     // Propagate corrections to youngest KFs / MPs
     for( int kfid = newframe.kfid_+1 ; kfid <= pmap_->nkfid_ ; kfid++ ) 
@@ -2584,8 +2584,8 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
     pmap_->pcurframe_->setTwc(updTwcur);
     
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_PoseGraph_Update");
 
     return true;
 }
@@ -2593,8 +2593,8 @@ bool Optimizer::localPoseGraph(Frame &newframe, int kfloop_id, const Sophus::SE3
 
 void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids) 
 {
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_StructBA_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_StructBA_setup");
 
     ceres::Problem problem;
     ceres::LossFunctionWrapper *loss_function;
@@ -2730,11 +2730,11 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
         }
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_setup");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_setup");
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_StructBA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_StructBA_Optimize");
 
     ceres::Solver::Options options;
     options.linear_solver_ordering.reset(ordering);
@@ -2757,14 +2757,14 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Optimize");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Optimize");
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::Start("2.LC_StructBA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::Start("2.LC_StructBA_Update");
 
     for( const auto &lmid : vlm2optids ) 
     {
@@ -2775,8 +2775,8 @@ void Optimizer::structureOnlyBA(const std::vector<int> &vlm2optids)
         }
     }
 
-    if( pslamstate_->debug_ || pslamstate_->log_timings_ )
-        Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Update");
+    // if( pslamstate_->debug_ || pslamstate_->log_timings_ )
+    //     Profiler::StopAndDisplay(pslamstate_->debug_, "2.LC_StructBA_Update");
 }
 
 
@@ -2813,9 +2813,9 @@ bool Optimizer::fullPoseGraph(std::vector<Sophus::SE3d, Eigen::aligned_allocator
         problem.AddResidualBlock(f, nullptr, map_id_posespar_.at(i-1).values(), map_id_posespar_.at(i).values());
     }
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n\n - [fullPoseGraph] Going to optimize over " << nbkfs 
-            << " KFs / " << nbposes << " poses in total!\n\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n\n - [fullPoseGraph] Going to optimize over " << nbkfs 
+    //         << " KFs / " << nbposes << " poses in total!\n\n";
 
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
@@ -2829,37 +2829,37 @@ bool Optimizer::fullPoseGraph(std::vector<Sophus::SE3d, Eigen::aligned_allocator
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    if( pslamstate_->debug_ )
-        std::cout << summary.FullReport() << std::endl;
+    // if( pslamstate_->debug_ )
+    //     std::cout << summary.FullReport() << std::endl;
     
-    std::ofstream f;
-    std::string filename = "ov2slam_full_traj_wlc_opt.txt";
+    // std::ofstream f;
+    // std::string filename = "ov2slam_full_traj_wlc_opt.txt";
 
-    if( pslamstate_->debug_ )
-        std::cout << "\n Going to write the full Pose Graph trajectory into : " 
-            << filename << "\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\n Going to write the full Pose Graph trajectory into : " 
+    //         << filename << "\n";
 
-    f.open(filename.c_str());
-    f << std::fixed;
+    // f.open(filename.c_str());
+    // f << std::fixed;
 
-    for( size_t i = 0 ; i < nbposes ; i++ )
-    {
-        auto newkfpose = map_id_posespar_.at(i);
-        Sophus::SE3d Twc = newkfpose.getPose();
+    // for( size_t i = 0 ; i < nbposes ; i++ )
+    // {
+    //     auto newkfpose = map_id_posespar_.at(i);
+    //     Sophus::SE3d Twc = newkfpose.getPose();
 
-        Eigen::Vector3d twc = Twc.translation();
-        Eigen::Quaterniond qwc = Twc.unit_quaternion();
+    //     Eigen::Vector3d twc = Twc.translation();
+    //     Eigen::Quaterniond qwc = Twc.unit_quaternion();
 
-        f << std::setprecision(9) << i << ". " << twc.x() << " " << twc.y() << " " << twc.z()
-            << " " << qwc.x() << " " << qwc.y() << " " << qwc.z() << " " << qwc.w() << std::endl;
+    //     f << std::setprecision(9) << i << ". " << twc.x() << " " << twc.y() << " " << twc.z()
+    //         << " " << qwc.x() << " " << qwc.y() << " " << qwc.z() << " " << qwc.w() << std::endl;
 
-        f.flush();
-    }
+    //     f.flush();
+    // }
 
-    f.close();
+    // f.close();
 
-    if( pslamstate_->debug_ )
-        std::cout << "\nFullPoseGrah Trajectory w. LC file written!\n";
+    // if( pslamstate_->debug_ )
+    //     std::cout << "\nFullPoseGrah Trajectory w. LC file written!\n";
 
     return true;
 }

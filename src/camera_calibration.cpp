@@ -32,15 +32,15 @@ CameraCalibration::CameraCalibration(const std::string &model, double fx, double
     : fx_(fx), fy_(fy), cx_(cx), cy_(cy), k1_(k1), k2_(k2), p1_(p1), p2_(p2)
     , img_w_(img_w), img_h_(img_h), img_size_(img_w, img_h)
 {
-    std::cout << "\n Setting up camera, model selected : " << model << "\n";
+    // std::cout << "\n Setting up camera, model selected : " << model << "\n";
 
     if( model == "pinhole") {
         model_ = Pinhole;
-        std::cout << "\nPinhole Camera Model created\n";
+        // std::cout << "\nPinhole Camera Model created\n";
     }
     else if( model == "fisheye" ) {
         model_ = Fisheye;
-        std::cout << "\nFisheye Camera Model selected";
+        // std::cout << "\nFisheye Camera Model selected";
     }
     else {
         std::cout << "\nNo supported camera model provided!"; 
@@ -63,11 +63,11 @@ CameraCalibration::CameraCalibration(const std::string &model, double fx, double
     cv::eigen2cv(Tc0ci_.rotationMatrix(), Rcv_c0ci_);
     cv::eigen2cv(Tc0ci_.translation(), tcv_c0ci_);
 
-    std::cout << "\n Camera Calibration set as : \n\n";
-    std::cout << "\n K = \n" << K_;
-    std::cout << "\n\n D = " << D_.transpose();
+    // std::cout << "\n Camera Calibration set as : \n\n";
+    // std::cout << "\n K = \n" << K_;
+    // std::cout << "\n\n D = " << D_.transpose();
 
-    std::cout << "\n opt K = \n" << Kcv_;
+    // std::cout << "\n opt K = \n" << Kcv_;
 
     const int nborder = 5;
     roi_rect_ = cv::Rect(cv::Point2i(nborder,nborder), cv::Point2i(img_w_-nborder,img_h_-nborder));
@@ -79,7 +79,7 @@ CameraCalibration::CameraCalibration(const std::string &model, double fx, double
 
 void CameraCalibration::setUndistMap(const double alpha) 
 {
-    std::cout << "\n\nComputing the undistortion mapping!\n";
+    // std::cout << "\n\nComputing the undistortion mapping!\n";
 
     cv::Size img_size(img_w_, img_h_);
 
@@ -124,16 +124,16 @@ void CameraCalibration::setUndistMap(const double alpha)
     // Setup roi mask / rect
     setROIMask(roi_rect_);
 
-    std::cout << "\n Undist Camera Calibration set as : \n\n";
-    std::cout << "\n K = \n" << K_;
-    std::cout << "\n\n D = " << D_.transpose();
-    std::cout << "\n\n ROI = " << roi_rect_;
+    // std::cout << "\n Undist Camera Calibration set as : \n\n";
+    // std::cout << "\n K = \n" << K_;
+    // std::cout << "\n\n D = " << D_.transpose();
+    // std::cout << "\n\n ROI = " << roi_rect_;
 }
 
 
 void CameraCalibration::setUndistStereoMap(const cv::Mat &R, const cv::Mat &P, const cv::Rect &roi) 
 {
-    std::cout << "\n\nComputing the stereo rectification mapping!\n";
+    // std::cout << "\n\nComputing the stereo rectification mapping!\n";
     
     // CV_16SC2 = 11 / CV_32FC1 = 5
     if( model_ == Pinhole )
@@ -186,10 +186,10 @@ void CameraCalibration::setUndistStereoMap(const cv::Mat &R, const cv::Mat &P, c
     // Setup roi mask / rect
     setROIMask(roi);
 
-    std::cout << "\n Undist+Rect Camera Calibration set as : \n\n";
-    std::cout << "\n K = \n" << K_;
-    std::cout << "\n\n D = " << D_.transpose();
-    std::cout << "\n\n ROI = " << roi_rect_;
+    // std::cout << "\n Undist+Rect Camera Calibration set as : \n\n";
+    // std::cout << "\n K = \n" << K_;
+    // std::cout << "\n\n D = " << D_.transpose();
+    // std::cout << "\n\n ROI = " << roi_rect_;
 }
 
 void CameraCalibration::setupExtrinsic(const Sophus::SE3d &Tc0ci)
@@ -203,9 +203,9 @@ void CameraCalibration::setupExtrinsic(const Sophus::SE3d &Tc0ci)
     cv::eigen2cv(Tcic0_.rotationMatrix(), Rcv_cic0_);
     cv::eigen2cv(Tcic0_.translation(), tcv_cic0_);
 
-    std::cout << "\n Camera Extrinsic : \n\n";
-    std::cout << "\n Rc0ci = \n" << Tc0ci_.rotationMatrix();
-    std::cout << "\n\n tc0ci = " << Tc0ci_.translation().transpose();
+    // std::cout << "\n Camera Extrinsic : \n\n";
+    // std::cout << "\n Rc0ci = \n" << Tc0ci_.rotationMatrix();
+    // std::cout << "\n\n tc0ci = " << Tc0ci_.translation().transpose();
 
     Eigen::Vector3d tc0ci = Tc0ci_.translation();
     if( (fabs(tc0ci.x()) > fabs(tc0ci.y()) && tc0ci.x() < 0)
