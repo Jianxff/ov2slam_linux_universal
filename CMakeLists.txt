@@ -1,104 +1,100 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(ov2slam)
+cmake_minimum_required(VERSION 3.8)
+project(fast_vo LANGUAGES CXX C)
 
-#######
-# NOTE!
-#######
-add_definitions(-DOPENCV_CONTRIB)
-add_definitions(-DIBOW_LCD)
+cmake_policy(SET CMP0072 NEW)
+cmake_policy(SET CMP0079 NEW)
 
+## cxx standard
 set(CMAKE_CXX_STANDARD 17)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Release")
 
+## cmake warnings
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-result -Wno-ignored-attributes")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-result -Wno-ignored-attributes")
 
-## System dependencies are found with CMake's conventions
+## cmake optimize
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -msimd128 -ffast-math")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msimd128 -ffast-math")
 
-# OpenCV
-find_package(OpenCV 3 REQUIRED)
-#Eigen3
-find_package(Eigen3 REQUIRED NO_MODULE)
+## emscripten settings
+set(COMPILE_FLAG_TEXT "-O3 -fexceptions")
+set(LINK_FLAG_TEXT " \
+    -s USE_ZLIB=1 \
+    -s DYNAMIC_EXECUTION=0 \
+    -s INITIAL_MEMORY=256MB \
+    -s NO_DISABLE_EXCEPTION_CATCHING=1 \
+    -s ERROR_ON_UNDEFINED_SYMBOLS=0 \
+    -s ALLOW_MEMORY_GROWTH=1 \
+    -s ALLOW_TABLE_GROWTH=1 \
+    -s MODULARIZE=1 \
+    -s EXPORT_NAME=initModule \
+    -s SINGLE_FILE=1 \
+    -s ENVIRONMENT=web,worker,shell \
+    -s USE_PTHREADS=0 \
+    -s SHARED_MEMORY=0 \
+    -fexceptions \
+    -O3 --no-entry --no-check-features --bind \
+    --extern-post-js ${CMAKE_CURRENT_SOURCE_DIR}/src/svo_js/export.js"
+)
 
-# Ceres
-set(Ceres_DIR ${PROJECT_SOURCE_DIR}/Thirdparty/ceres-solver/install/lib/cmake/Ceres)
+## emscripten debug
+# debug on
+# set(LINK_FLAG_TEXT "${LINK_FLAG_TEXT} -s ASSERTIONS=0")
+# debug off
+set(COMPILE_FLAG_TEXT "${COMPILE_FLAG_TEXT} -g0")
+set(LINK_FLAG_TEXT "${LINK_FLAG_TEXT} -g0 -s ASSERTIONS=0")
+
+## ccache
+find_program(CCACHE_EXE ccache)
+if(CCACHE_EXE)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_EXE}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CCACHE_EXE}")
+    message(STATUS "ccache: Enabled")
+endif()
+
+## OpenGV
+find_package(opengv REQUIRED)
+if(opengv_FOUND)
+    message(STATUS "OpenGV found")
+    add_definitions(-DUSE_OPENGV)
+endif()
+
+## dependencies
+find_package(OpenCV REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(Ceres REQUIRED)
-
-#Sophus
-# First search for a custom build of Sophus within this project
-set(Sophus_DIR ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus/install/share/sophus/cmake) 
 find_package(Sophus REQUIRED)
 
-find_package(Pangolin REQUIRED)
 
-###########
-## Build ##
-###########
+add_executable(${PROJECT_NAME} "")
 
-## Declare a C++ library
-add_library(${PROJECT_NAME}
-  src/camera_calibration.cpp
-  src/ceres_parametrization.cpp
-  src/estimator.cpp
-  src/feature_extractor.cpp
-  src/feature_tracker.cpp
-  src/frame.cpp
-  src/loop_closer.cpp
-  src/map_manager.cpp
-  src/map_point.cpp
-  src/mapper.cpp
-  src/multi_view_geometry.cpp
-  src/optimizer.cpp
-  src/ov2slam.cpp
-  src/slam_params.cpp
-  src/visual_front_end.cpp
+FILE(GLOB_RECURSE SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+target_sources(${PROJECT_NAME}
+    PRIVATE
+        ${SRC}
 )
 
-# Add mandatory dependencies
-target_include_directories(${PROJECT_NAME}
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include/ceres_parametrization
-)
-
-target_link_libraries(${PROJECT_NAME}
+target_include_directories(${PROJECT_NAME} 
     PUBLIC
-      Eigen3::Eigen
-      Sophus::Sophus
-    PRIVATE
-      ${OpenCV_LIBS}
-      Ceres::ceres
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/include
 )
 
-
-target_include_directories(
-  ${PROJECT_NAME}
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/Thirdparty/obindex2/lib/include/
-    ${PROJECT_SOURCE_DIR}/Thirdparty/ibow_lcd/include/
+target_link_libraries(${PROJECT_NAME} 
+    PUBLIC
+        ${OpenCV_LIBS}
+        Eigen3::Eigen
+        opengv
+        Ceres::ceres
+        Sophus::Sophus
 )
 
-target_link_libraries(
-  ${PROJECT_NAME}
-    PRIVATE
-      ${PROJECT_SOURCE_DIR}/Thirdparty/ibow_lcd/build/liblcdetector.so
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "${LINK_FLAG_TEXT}")
+set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAG_TEXT}")
 
-
-
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/example)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/example)
-
-add_executable(mono_euroc 
-  example/mono_euroc.cpp 
-  src/visualize.cpp
-)
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(
-    mono_euroc
-    PRIVATE
-      ${PROJECT_NAME}
-      ${Pangolin_LIBRARIES}
+# add export
+add_custom_command(TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND cp ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.js ${PROJECT_SOURCE_DIR}/examples/js
+    VERBATIM
 )
